@@ -5,49 +5,86 @@ import toast from 'react-hot-toast'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // On mount, restore user from localStorage
+  // Restore user from localStorage on app start
   useEffect(() => {
-    const stored = localStorage.getItem('user')
-    if (stored) setUser(JSON.parse(stored))
-    setLoading(false)
+    try {
+      const stored = localStorage.getItem('user')
+      if (stored) {
+        setUser(JSON.parse(stored))
+      }
+    } catch (err) {
+      console.error('Error parsing user from localStorage', err)
+      localStorage.removeItem('user')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
+  // LOGIN
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password })
-    setUser(data)
-    localStorage.setItem('user', JSON.stringify(data))
-    return data
+    try {
+      const { data } = await api.post('/auth/login', { email, password })
+      setUser(data)
+      localStorage.setItem('user', JSON.stringify(data))
+      return data
+    } catch (err) {
+      throw err // LoginPage मा handle हुन्छ
+    }
   }
 
+  // REGISTER
   const register = async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password })
-    setUser(data)
-    localStorage.setItem('user', JSON.stringify(data))
-    return data
+    try {
+      const { data } = await api.post('/auth/register', { name, email, password })
+      setUser(data)
+      localStorage.setItem('user', JSON.stringify(data))
+      return data
+    } catch (err) {
+      throw err
+    }
   }
 
+  // LOGOUT
   const logout = () => {
     setUser(null)
     localStorage.removeItem('user')
-    toast.success('Logged out')
+    toast.success('Logged out successfully')
   }
 
+  // UPDATE PROFILE
   const updateProfile = async (profileData) => {
-    const { data } = await api.put('/auth/profile', profileData)
-    const updated = { ...user, ...data }
-    setUser(updated)
-    localStorage.setItem('user', JSON.stringify(updated))
-    return updated
+    try {
+      const { data } = await api.put('/auth/profile', profileData)
+      const updatedUser = { ...user, ...data }
+
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+
+      toast.success('Profile updated')
+      return updatedUser
+    } catch (err) {
+      throw err
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
-      {children}
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        updateProfile,
+      }}
+    >
+      {!loading && children}
     </AuthContext.Provider>
   )
 }
 
+// Custom hook
 export const useAuth = () => useContext(AuthContext)
