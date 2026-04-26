@@ -3,16 +3,15 @@ import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import { useThemeStore, useAuthStore } from './utils/store';
 
-// Layout
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 
-// Pages
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { Login } from './pages/Login';
+import { Register } from './pages/Login';
+import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import { OrderSuccess } from './pages/OrderSuccess';
@@ -24,11 +23,10 @@ import Profile from './pages/Profile';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
 
-// Admin
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
-import AdminOrders from './pages/admin/Orders';
+import { AdminOrders } from './pages/admin/Orders';
 import { AdminUsers } from './pages/admin/Orders';
 import { AdminCategories } from './pages/admin/Orders';
 import { AdminFounders } from './pages/admin/Orders';
@@ -77,6 +75,7 @@ export default function App() {
         <Route path="/compare" element={<Layout><Compare /></Layout>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
 
         {/* Protected */}
         <Route path="/cart" element={<ProtectedLayout><Cart /></ProtectedLayout>} />
@@ -90,12 +89,12 @@ export default function App() {
         {/* Admin */}
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboard />} />
+          <Route path="analytics" element={<Analytics />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="founders" element={<AdminFounders />} />
-          <Route path="analytics" element={<Analytics />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

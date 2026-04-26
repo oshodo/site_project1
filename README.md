@@ -306,5 +306,3 @@ Run the seeder again after editing `server/utils/seeder.js`.
 ## 📄 License
 
 MIT — Built with ❤️ in Nepal by **Jeevan Don** & **Sabai Lama**
-#   s a b a i s a l e  
- 
