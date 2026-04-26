@@ -1,38 +1,35 @@
 const mongoose = require('mongoose');
 
-// Individual review sub-schema
-const reviewSchema = new mongoose.Schema(
-  {
-    user:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    name:    { type: String, required: true },
-    rating:  { type: Number, required: true, min: 1, max: 5 },
-    comment: { type: String, required: true },
-  },
-  { timestamps: true }
-);
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  slug: { type: String, unique: true, lowercase: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true, min: 0 },
+  originalPrice: { type: Number },
+  discount: { type: Number, default: 0 },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  images: [{ type: String }],
+  image: { type: String },
+  stock: { type: Number, default: 0, min: 0 },
+  brand: { type: String },
+  tags: [String],
+  specifications: [{ key: String, value: String }],
+  rating: { type: Number, default: 0, min: 0, max: 5 },
+  numReviews: { type: Number, default: 0 },
+  featured: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true },
+  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true });
 
-const productSchema = new mongoose.Schema(
-  {
-    name:        { type: String, required: true, trim: true },
-    description: { type: String, required: true },
-    price:       { type: Number, required: true, min: 0 },
-    comparePrice:{ type: Number, default: 0 },           // original price for discount display
-    category:    { type: String, required: true },
-    brand:       { type: String, default: '' },
-    images:      [{ type: String }],                      // array of image URLs
-    stock:       { type: Number, required: true, default: 0 },
-    sold:        { type: Number, default: 0 },
-    ratings:     { type: Number, default: 0 },
-    numReviews:  { type: Number, default: 0 },
-    reviews:     [reviewSchema],
-    isFeatured:  { type: Boolean, default: false },
-    isActive:    { type: Boolean, default: true },
-    tags:        [{ type: String }],
-  },
-  { timestamps: true }
-);
-
-// Full-text search index
-productSchema.index({ name: 'text', description: 'text', category: 'text', brand: 'text' });
+// Auto-generate slug
+productSchema.pre('save', function (next) {
+  if (this.isModified('name')) {
+    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+  }
+  if (this.originalPrice && this.price) {
+    this.discount = Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
+  }
+  next();
+});
 
 module.exports = mongoose.model('Product', productSchema);
