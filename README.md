@@ -1,23 +1,29 @@
-# SabaiSale — Premium Full-Stack E-Commerce Platform
+# 🛍️ SabaiSale — Premium E-Commerce Platform
 
-A complete, production-ready e-commerce app built with **React + Vite**, **Node.js/Express**, and **MongoDB**.
+> Nepal's premium full-stack e-commerce platform built with React, Node.js, Express & MongoDB.
+
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js)](https://nodejs.org)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://mongodb.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38BDF8?logo=tailwindcss)](https://tailwindcss.com)
 
 ---
 
 ## ✨ Features
 
-- ✅ User registration & login with JWT
-- ✅ Product browsing with search, filters & pagination
-- ✅ Product detail page with image gallery and reviews
-- ✅ Shopping cart with localStorage persistence
-- ✅ Multi-step checkout (Shipping → Payment → Review)
-- ✅ Stripe payment integration (demo mode included)
-- ✅ Order history and status tracking
-- ✅ User profile management
-- ✅ Admin dashboard with live stats
-- ✅ Admin: Product, Order & User CRUD
-- ✅ Responsive design (mobile + desktop)
-- ✅ 12 sample products via database seeder
+| Feature | Details |
+|---------|---------|
+| 🎨 Premium UI | Apple/Nike-inspired design, dark mode, smooth Framer Motion animations |
+| 🔐 Auth | JWT, bcrypt, role-based (user / admin) |
+| 🛒 Cart & Checkout | Zustand state, multi-step checkout, NPR pricing |
+| ❤️ Wishlist | Toggle wishlist, persistent across sessions |
+| ⭐ Reviews | Star ratings, per-product, one per user |
+| 📱 Responsive | Mobile-first, fully responsive on all screen sizes |
+| 🔍 Search & Filter | Full-text search, category, price range, sort |
+| 📊 Admin Panel | Dashboard with analytics, full CRUD for products/orders/users |
+| 📦 50+ Products | 4 categories, realistic seeded data |
+| 🖼️ Image Upload | Cloudinary integration |
+| 🚀 Deployment Ready | Vercel (frontend) + Render (backend) |
 
 ---
 
@@ -29,125 +35,103 @@ sabaisale/
 │   ├── public/
 │   │   └── favicon.svg
 │   ├── src/
-│   │   ├── api/
-│   │   │   └── axios.js           # Axios instance with auth interceptor
 │   │   ├── components/
-│   │   │   ├── layout/
-│   │   │   │   ├── Navbar.jsx
-│   │   │   │   └── Footer.jsx
-│   │   │   ├── AdminRoute.jsx
-│   │   │   ├── PrivateRoute.jsx
-│   │   │   ├── ProductCard.jsx
-│   │   │   └── ScrollToTop.jsx
-│   │   ├── context/
-│   │   │   ├── AuthContext.jsx
-│   │   │   └── CartContext.jsx
+│   │   │   └── common/            # Navbar, Footer, ProductCard, etc.
 │   │   ├── pages/
-│   │   │   ├── admin/
-│   │   │   │   ├── AdminDashboard.jsx
-│   │   │   │   ├── AdminLayout.jsx
-│   │   │   │   ├── AdminOrders.jsx
-│   │   │   │   ├── AdminProducts.jsx
-│   │   │   │   └── AdminUsers.jsx
-│   │   │   ├── CartPage.jsx
-│   │   │   ├── CheckoutPage.jsx
-│   │   │   ├── HomePage.jsx
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── OrderDetailPage.jsx
-│   │   │   ├── OrderHistoryPage.jsx
-│   │   │   ├── OrderPages.jsx
-│   │   │   ├── OrderSuccessPage.jsx
-│   │   │   ├── ProductDetailPage.jsx
-│   │   │   ├── ProductsPage.jsx
-│   │   │   ├── ProfilePage.jsx
-│   │   │   └── RegisterPage.jsx
+│   │   │   ├── admin/             # Dashboard, Products, Orders, Users, etc.
+│   │   │   ├── Home.jsx
+│   │   │   ├── Products.jsx
+│   │   │   ├── ProductDetail.jsx
+│   │   │   ├── Cart.jsx
+│   │   │   ├── Checkout.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── About.jsx
+│   │   │   └── ...
+│   │   ├── utils/
+│   │   │   ├── api.js             # All axios API calls
+│   │   │   └── store.js           # Zustand stores (auth, cart, wishlist, theme)
 │   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── package.json
-│   ├── postcss.config.js
+│   │   ├── main.jsx
+│   │   └── index.css
 │   ├── tailwind.config.js
-│   └── vite.config.js
+│   ├── vite.config.js
+│   └── vercel.json
 │
-└── server/                        # Node.js + Express backend
-    ├── middleware/
-    │   └── authMiddleware.js      # JWT protect + admin guard
+└── server/                        # Express backend
     ├── models/
-    │   ├── Order.js
+    │   ├── User.js
     │   ├── Product.js
-    │   └── User.js
+    │   └── index.js               # Category, Order, Review, Founder
     ├── routes/
-    │   ├── adminRoutes.js
-    │   ├── authRoutes.js
-    │   ├── orderRoutes.js
-    │   ├── paymentRoutes.js
-    │   └── productRoutes.js
-    ├── seed/
-    │   └── seedData.js            # Sample data seeder
-    ├── .env                       # Your local env file (gitignored)
-    ├── .env.example               # Template — copy this
-    ├── package.json
-    └── server.js
+    │   ├── auth.js
+    │   ├── products.js
+    │   ├── categories.js
+    │   ├── orders.js
+    │   ├── cart.js
+    │   ├── reviews.js
+    │   ├── wishlist.js
+    │   ├── founders.js
+    │   ├── admin.js
+    │   └── upload.js
+    ├── middleware/
+    │   └── auth.js
+    ├── utils/
+    │   └── seeder.js
+    ├── index.js
+    ├── render.yaml
+    └── package.json
 ```
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 18+
+- MongoDB Atlas account (free tier)
+- Git
 
-| Tool | Version |
-|------|---------|
-| Node.js | 18 + |
-| npm | 9 + |
-| MongoDB Atlas | Free tier works |
-| Git | Any recent |
-
----
-
-### Step 1 — Clone the Repository
+### Step 1 — Clone & Install
 
 ```bash
-git clone https://github.com/your-username/sabaisale.git
+git clone <your-repo-url>
 cd sabaisale
+
+# Install all dependencies at once
+npm run install:all
 ```
 
----
-
-### Step 2 — Set Up the Backend
+### Step 2 — Configure Environment
 
 ```bash
 cd server
-npm install
+cp ../.env.example .env
 ```
 
-Copy the environment template and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and set the following (see the `.env.example` section below for details):
+Edit `server/.env`:
 
 ```env
 PORT=5000
-MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/sabaisale
-JWT_SECRET=your_super_long_random_secret_at_least_32_chars
-JWT_EXPIRE=30d
+NODE_ENV=development
+
+# MongoDB Atlas — get from mongodb.com/atlas
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/sabaisale
+
+# JWT Secret — use any long random string
+JWT_SECRET=your_super_secret_key_minimum_32_chars_long
+
+# Frontend URL (for CORS)
 CLIENT_URL=http://localhost:5173
-STRIPE_SECRET_KEY=sk_test_your_stripe_key_optional
+
+# Cloudinary — get from cloudinary.com (free tier)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Admin Credentials
+ADMIN_EMAIL=admin@sabaisale.com
+ADMIN_PASSWORD=Jeevan@Sabaisale
 ```
-
-#### How to get your MongoDB URI
-
-1. Go to [mongodb.com/atlas](https://mongodb.com/atlas) → create a **free** cluster
-2. **Database Access** → Add a database user (username + password)
-3. **Network Access** → Add IP `0.0.0.0/0` (allow from anywhere)
-4. **Clusters** → Connect → Drivers → copy the connection string
-5. Replace `<password>` in the URI with your database user's password
-
----
 
 ### Step 3 — Seed the Database
 
@@ -156,246 +140,171 @@ cd server
 npm run seed
 ```
 
-Expected output:
+Output:
 ```
-Connected to MongoDB
-Cleared existing data
-Seeded 12 products
-
-✅ Database seeded successfully!
-Admin: admin@sabaisale.com / admin123
-User:  john@example.com    / user123
+✅ Connected to MongoDB
+🗑️  Cleared existing data
+✅ Created 4 categories
+✅ Admin created: admin@sabaisale.com
+✅ Created 51 products
+✅ Created 2 founders
+🎉 Database seeded successfully!
 ```
 
----
-
-### Step 4 — Set Up the Frontend
+### Step 4 — Run the App
 
 ```bash
-cd ../client
-npm install
-```
-
-Create the client environment file:
-
-```bash
-# client/.env
-VITE_API_URL=http://localhost:5000/api
-```
-
-> **Note:** If you're using the Vite proxy (default `vite.config.js`), you don't need `VITE_API_URL` for local development — requests to `/api` are automatically forwarded to port 5000.
-
----
-
-### Step 5 — Run the App
-
-Open **two terminals** from the project root:
-
-**Terminal 1 — Backend:**
-```bash
-cd server
+# From root directory — runs both frontend and backend
 npm run dev
-# ✅ MongoDB connected
-# ✅ Server running on port 5000
 ```
 
-**Terminal 2 — Frontend:**
+Or separately:
 ```bash
-cd client
-npm run dev
-# ✅ Local: http://localhost:5173
+# Terminal 1 — Backend
+cd server && npm run dev
+
+# Terminal 2 — Frontend
+cd client && npm run dev
 ```
 
-Then open [http://localhost:5173](http://localhost:5173) in your browser. 🎉
+Open [http://localhost:5173](http://localhost:5173)
 
 ---
 
 ## 🔑 Demo Credentials
 
-| Role  | Email                   | Password  |
-|-------|-------------------------|-----------|
-| Admin | admin@sabaisale.com     | admin123  |
-| User  | john@example.com        | user123   |
+| Role  | Email | Password |
+|-------|-------|----------|
+| **Admin** | admin@sabaisale.com | Jeevan@Sabaisale |
+| **User** | (register any account) | — |
 
----
-
-## 🛠️ Available Scripts
-
-### Server (`/server`)
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start with nodemon (auto-restart) |
-| `npm start` | Start in production mode |
-| `npm run seed` | Seed the database with sample data |
-
-### Client (`/client`)
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
+**Admin Login:** Username is `Jeevandon`, admin email is `admin@sabaisale.com`
 
 ---
 
 ## 📡 API Reference
 
-### Auth Routes — `/api/auth`
+### Auth
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | /api/auth/register | Register | — |
+| POST | /api/auth/login | Login | — |
+| GET | /api/auth/me | Get profile | ✓ |
+| PUT | /api/auth/profile | Update profile | ✓ |
+| PUT | /api/auth/change-password | Change password | ✓ |
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/register` | Register new user | ❌ |
-| POST | `/login` | Login & get token | ❌ |
-| GET | `/profile` | Get logged-in user | ✅ |
-| PUT | `/profile` | Update profile | ✅ |
+### Products
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | /api/products | List (filter, search, sort, paginate) | — |
+| GET | /api/products/featured | Featured products | — |
+| GET | /api/products/:id | Product detail | — |
+| POST | /api/products | Create product | Admin |
+| PUT | /api/products/:id | Update product | Admin |
+| DELETE | /api/products/:id | Soft-delete | Admin |
 
-### Product Routes — `/api/products`
+### Categories
+| GET/POST | /api/categories | List / Create | —/Admin |
+| PUT/DELETE | /api/categories/:id | Update / Delete | Admin |
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/` | List with filters, search, pagination | ❌ |
-| GET | `/featured` | Featured products | ❌ |
-| GET | `/categories` | All categories | ❌ |
-| GET | `/:id` | Product detail | ❌ |
-| POST | `/:id/review` | Submit review | ✅ |
+### Orders
+| POST | /api/orders | Place order | ✓ |
+| GET | /api/orders/my | My orders | ✓ |
+| GET | /api/orders/:id | Order detail | ✓ |
+| PUT | /api/orders/:id/status | Update status | Admin |
 
-### Order Routes — `/api/orders`
+### Reviews
+| GET | /api/reviews/product/:id | Product reviews | — |
+| POST | /api/reviews | Add review | ✓ |
+| PUT/DELETE | /api/reviews/:id | Edit/Delete | ✓ |
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/` | Place new order | ✅ |
-| GET | `/myorders` | My order history | ✅ |
-| GET | `/:id` | Order detail | ✅ |
-| PUT | `/:id/pay` | Mark order as paid | ✅ |
-
-### Admin Routes — `/api/admin` (Admin only)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/stats` | Dashboard stats |
-| GET / POST | `/products` | List / Create products |
-| PUT / DELETE | `/products/:id` | Update / Delete product |
-| GET | `/orders` | All orders |
-| PUT | `/orders/:id/status` | Update order status |
-| GET | `/users` | All users |
-| PUT | `/users/:id` | Update user role |
-| DELETE | `/users/:id` | Delete user |
+### Admin
+| GET | /api/admin/dashboard | Analytics stats | Admin |
+| GET | /api/admin/users | All users | Admin |
+| PUT/DELETE | /api/admin/users/:id | Edit/Delete user | Admin |
 
 ---
 
-## 🌐 Deployment Guide
+## 🚀 Deployment
 
-### Deploy Backend → [Render](https://render.com) (Free)
+### Deploy Backend → Render
 
-1. Push your project to GitHub
-2. Go to **Render** → New → **Web Service**
-3. Connect your repo, set **Root Directory** to `server`
+1. Push code to GitHub
+2. Go to [render.com](https://render.com) → **New Web Service**
+3. Connect your repo → select `server/` as root
 4. Settings:
    - **Build Command:** `npm install`
    - **Start Command:** `npm start`
-5. Add **Environment Variables** (same as your `.env`):
-   - `MONGO_URI`
-   - `JWT_SECRET`
-   - `CLIENT_URL` → your Vercel URL (add after deploying frontend)
-6. Deploy — copy your Render URL (e.g. `https://sabaisale-api.onrender.com`)
+   - **Node version:** 18
+5. Add all environment variables from `.env`
+6. Click **Deploy**
+7. Copy your Render URL: `https://sabaisale-api.onrender.com`
 
----
+### Deploy Frontend → Vercel
 
-### Deploy Frontend → [Vercel](https://vercel.com) (Free)
-
-1. Go to **Vercel** → New Project → import your GitHub repo
-2. Set **Root Directory** to `client`
-3. Add Environment Variable:
+1. Go to [vercel.com](https://vercel.com) → **New Project**
+2. Import your GitHub repo → set **Root Directory** to `client`
+3. Add environment variable:
    ```
    VITE_API_URL=https://sabaisale-api.onrender.com/api
    ```
-4. Deploy — your site is live!
+4. Click **Deploy**
+5. Your site: `https://sabaisale.vercel.app`
 
----
+### Update CORS
 
-### Final Step — Update CORS
-
-Go back to your Render backend → Environment → update:
+After deploying frontend, update backend `.env` on Render:
 ```env
-CLIENT_URL=https://your-app.vercel.app
+CLIENT_URL=https://sabaisale.vercel.app
 ```
 
-Redeploy the backend. Done! ✅
-
 ---
 
-## 💳 Stripe Integration (Optional)
-
-The app ships with a simulated card payment. To enable real Stripe:
-
-1. Create account at [stripe.com](https://stripe.com)
-2. Dashboard → Developers → API Keys → copy **Test** keys
-3. Add to server `.env`:
-   ```env
-   STRIPE_SECRET_KEY=sk_test_...
-   ```
-4. Add to client `.env`:
-   ```env
-   VITE_STRIPE_PUBLIC_KEY=pk_test_...
-   ```
-5. Wrap your `CheckoutPage` with `<Elements>` from `@stripe/react-stripe-js` for a real card form
-
----
-
-## 🧱 Tech Stack
+## 🎨 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite, Tailwind CSS, React Router v6 |
+| Frontend | React 18, Vite, Tailwind CSS, Framer Motion |
+| State Management | Zustand |
 | Backend | Node.js, Express.js |
-| Database | MongoDB Atlas (Mongoose ODM) |
-| Auth | JWT + bcrypt |
-| Payment | Stripe (demo mode included) |
-| Deployment | Vercel (frontend) + Render (backend) |
+| Database | MongoDB Atlas, Mongoose |
+| Authentication | JWT, bcryptjs |
+| Image Uploads | Cloudinary |
+| Validation | express-validator |
+| Deploy: Frontend | Vercel |
+| Deploy: Backend | Render |
 
 ---
 
-## 🔧 Tailwind CSS Setup (Already Configured)
+## 📸 Screenshots
 
-The project uses Tailwind v3. Key config files:
-
-**`client/tailwind.config.js`**
-```js
-export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
-  theme: {
-    extend: {
-      colors: {
-        primary: { DEFAULT: '#f97316', light: '#fed7aa', dark: '#ea580c' },
-      },
-    },
-  },
-  plugins: [],
-}
-```
-
-**`client/postcss.config.js`**
-```js
-export default { plugins: { tailwindcss: {}, autoprefixer: {} } }
-```
-
-**`client/src/index.css`** — imports Tailwind and defines reusable component classes (`btn-primary`, `input-field`, `card`, `badge`).
+> After running the app, you'll see:
+> - **Homepage**: Hero slider, categories grid, featured products, testimonials
+> - **Products**: Grid with filters sidebar, search, sort, pagination
+> - **Product Detail**: Image gallery, reviews, related products
+> - **Admin Panel**: Dark sidebar, dashboard analytics, full CRUD tables
+> - **Dark Mode**: Full dark mode toggle everywhere
 
 ---
 
-## 🐛 Common Issues
+## 🛠️ Customization
 
-| Problem | Fix |
-|---------|-----|
-| `MongooseServerSelectionError` | Check your `MONGO_URI` and whitelist your IP in Atlas |
-| `401 Unauthorized` on all routes | Check `JWT_SECRET` matches between `.env` and token generation |
-| CORS error in browser | Ensure `CLIENT_URL` in server `.env` matches your frontend URL exactly |
-| Vite proxy not working | Make sure backend is running on port 5000 |
-| `npm run seed` fails | Verify `MONGO_URI` is set in `server/.env` |
+### Change colors
+Edit `client/tailwind.config.js` → `colors.primary` to change the orange theme.
+
+### Add payment gateway
+1. Create account at [eSewa](https://developer.esewa.com.np/) or [Khalti](https://docs.khalti.com/)
+2. Add API keys to `.env`
+3. Create payment routes in `server/routes/payment.js`
+4. Add payment confirmation step in `client/src/pages/Checkout.jsx`
+
+### Add more categories
+Run the seeder again after editing `server/utils/seeder.js`.
 
 ---
 
 ## 📄 License
 
-MIT — free to use for personal and commercial projects.
+MIT — Built with ❤️ in Nepal by **Jeevan Don** & **Sabai Lama**
+#   s a b a i s a l e  
+ 
