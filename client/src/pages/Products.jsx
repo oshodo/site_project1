@@ -242,33 +242,3 @@ export default function Products() {
     </div>
   );
 }
-// In Products.jsx
-import { sampleProducts } from 'C:\Users\G_WoN\Desktop\Sabaisale\client\src\data\sampleProducts.js';
-
-const fetchProducts = useCallback(async () => {
-  setLoading(true);
-  try {
-    const params = {};
-    Object.entries(filters).forEach(([k, v]) => { if (v) params[k] = v; });
-    const { data } = await productsAPI.getAll(params);
-    setProducts(data.products || []);
-    setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
-  } catch (error) {
-    console.error('API failed, using sample data:', error);
-    // Filter sample products based on current filters
-    let filtered = [...sampleProducts];
-    if (filters.category) {
-      filtered = filtered.filter(p => p.category === filters.category);
-    }
-    if (filters.search) {
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        p.description.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
-    setProducts(filtered);
-    setPagination({ page: 1, pages: 1, total: filtered.length });
-  } finally {
-    setLoading(false);
-  }
-}, [filters]);
