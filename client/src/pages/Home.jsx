@@ -1,264 +1,259 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, ShoppingBag, Star, Truck, Shield, RotateCcw, Headphones, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingBag, Zap, Shield, Truck, RotateCcw, Headphones } from 'lucide-react';
 import { productsAPI, categoriesAPI } from '../utils/api';
 import { ProductCard, SkeletonCard, SectionHeader } from '../components/common/index';
 
-const HERO_IMAGES = [
-  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200',
-  'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200',
-  'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200',
+const BANNERS = [
+  { img: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200', title: 'Electronics Sale', sub: 'Up to 50% off on gadgets', link: '/products?category=Electronics', color: 'from-blue-900' },
+  { img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200', title: 'Fashion Week', sub: 'New arrivals daily', link: '/products?category=Fashion', color: 'from-purple-900' },
+  { img: 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=1200', title: 'Home & Living', sub: 'Transform your space', link: '/products?category=Home', color: 'from-green-900' },
 ];
 
-const features = [
-  { icon: <Truck size={22} />, title: 'Free Shipping', desc: 'On orders above NPR 5,000' },
-  { icon: <Shield size={22} />, title: 'Secure Payments', desc: 'eSewa, Khalti, COD accepted' },
-  { icon: <RotateCcw size={22} />, title: 'Easy Returns', desc: '7-day hassle-free returns' },
-  { icon: <Headphones size={22} />, title: '24/7 Support', desc: 'Always here to help you' },
+const CATEGORIES = [
+  { name: 'Electronics', icon: '📱', color: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-600' },
+  { name: 'Fashion', icon: '👗', color: 'bg-pink-50 dark:bg-pink-950', text: 'text-pink-600' },
+  { name: 'Home', icon: '🏠', color: 'bg-green-50 dark:bg-green-950', text: 'text-green-600' },
+  { name: 'Accessories', icon: '👜', color: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-600' },
+  { name: 'Sports', icon: '⚽', color: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-600' },
+  { name: 'Books', icon: '📚', color: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-600' },
+  { name: 'Beauty', icon: '💄', color: 'bg-rose-50 dark:bg-rose-950', text: 'text-rose-600' },
+  { name: 'Computers', icon: '💻', color: 'bg-indigo-50 dark:bg-indigo-950', text: 'text-indigo-600' },
 ];
+
+const FEATURES = [
+  { icon: <Truck size={20} className="text-primary-500" />, title: 'Free Delivery', sub: 'On orders above NPR 5,000' },
+  { icon: <Shield size={20} className="text-primary-500" />, title: '100% Secure', sub: 'Safe & encrypted payments' },
+  { icon: <RotateCcw size={20} className="text-primary-500" />, title: 'Easy Returns', sub: '7-day hassle-free returns' },
+  { icon: <Headphones size={20} className="text-primary-500" />, title: '24/7 Support', sub: 'Dedicated customer care' },
+];
+
+function FlashTimer() {
+  const [time, setTime] = useState({ h: 5, m: 59, s: 59 });
+  useEffect(() => {
+    const t = setInterval(() => {
+      setTime(prev => {
+        let { h, m, s } = prev;
+        s--; if (s < 0) { s = 59; m--; } if (m < 0) { m = 59; h--; } if (h < 0) { h = 5; m = 59; s = 59; }
+        return { h, m, s };
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="flex items-center gap-1 text-white">
+      <span className="flash-timer">{String(time.h).padStart(2,'0')}</span>
+      <span className="font-bold">:</span>
+      <span className="flash-timer">{String(time.m).padStart(2,'0')}</span>
+      <span className="font-bold">:</span>
+      <span className="flash-timer">{String(time.s).padStart(2,'0')}</span>
+    </div>
+  );
+}
+
+function Banner() {
+  const [idx, setIdx] = useState(0);
+  const timerRef = useRef(null);
+  const startTimer = () => { timerRef.current = setInterval(() => setIdx(i => (i+1) % BANNERS.length), 4000); };
+  useEffect(() => { startTimer(); return () => clearInterval(timerRef.current); }, []);
+  const go = (dir) => { clearInterval(timerRef.current); setIdx(i => (i + dir + BANNERS.length) % BANNERS.length); startTimer(); };
+  const b = BANNERS[idx];
+  return (
+    <div className="relative h-48 md:h-72 rounded overflow-hidden bg-gray-900">
+      <img src={b.img} alt={b.title} className="w-full h-full object-cover opacity-60 transition-all duration-500" />
+      <div className={`absolute inset-0 bg-gradient-to-r ${b.color} to-transparent`} />
+      <div className="absolute inset-0 flex items-center px-8">
+        <div className="text-white">
+          <h2 className="text-2xl md:text-4xl font-bold mb-2">{b.title}</h2>
+          <p className="text-sm md:text-base text-white/80 mb-4">{b.sub}</p>
+          <Link to={b.link} className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-5 py-2 rounded inline-block transition-colors">
+            Shop Now
+          </Link>
+        </div>
+      </div>
+      <button onClick={() => go(-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors">
+        <ChevronLeft size={18} />
+      </button>
+      <button onClick={() => go(1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors">
+        <ChevronRight size={18} />
+      </button>
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+        {BANNERS.map((_,i) => <button key={i} onClick={() => setIdx(i)} className={`h-1.5 rounded-full transition-all ${i===idx ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`} />)}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [newArrivals, setNewArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [heroIdx, setHeroIdx] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([productsAPI.getFeatured(), categoriesAPI.getAll()])
-      .then(([p, c]) => {
-        setFeatured(p.data.products);
-        setCategories(c.data.categories);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => setHeroIdx(i => (i + 1) % HERO_IMAGES.length), 5000);
-    return () => clearInterval(t);
+    Promise.all([
+      productsAPI.getFeatured(),
+      productsAPI.getAll({ sort: 'newest', limit: 10 }),
+    ]).then(([f, n]) => {
+      setFeatured(f.data.products || []);
+      setNewArrivals(n.data.products || []);
+    }).finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="pt-16 md:pt-20">
-      {/* ─── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gray-950">
-        {/* BG Image */}
-        {HERO_IMAGES.map((src, i) => (
-          <motion.div key={src} className="absolute inset-0"
-            animate={{ opacity: i === heroIdx ? 1 : 0 }}
-            transition={{ duration: 1.2 }}
-          >
-            <img src={src} alt="" className="w-full h-full object-cover opacity-30" />
-          </motion.div>
-        ))}
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/90 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />
-
-        {/* Floating orbs */}
-        <div className="absolute top-20 right-20 w-72 h-72 bg-primary-500/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-20 right-40 w-48 h-48 bg-orange-300/10 rounded-full blur-3xl animate-float" />
-
-        <div className="container-custom relative z-10">
-          <div className="max-w-2xl">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <span className="inline-flex items-center gap-2 bg-primary-500/20 border border-primary-500/40 text-primary-400 px-4 py-2 rounded-full text-sm font-semibold mb-6">
-                <Zap size={14} fill="currentColor" />
-                Nepal's #1 Premium Store
-              </span>
-            </motion.div>
-
-            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="font-display text-5xl md:text-7xl font-bold text-white leading-none mb-6"
-            >
-              Shop<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-orange-300">
-                Premium.
-              </span><br />
-              Shop Smart.
-            </motion.h1>
-
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="text-gray-300 text-lg md:text-xl mb-8 leading-relaxed"
-            >
-              Discover thousands of authentic products — from cutting-edge electronics to premium fashion. Delivered to your doorstep in Nepal.
-            </motion.p>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/products')}
-                className="btn-primary flex items-center justify-center gap-2 text-base py-4 px-8"
-              >
-                <ShoppingBag size={18} />
-                Explore Products
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/about')}
-                className="btn-secondary border-white/30 text-white hover:bg-white hover:text-gray-900 flex items-center justify-center gap-2 text-base py-4 px-8"
-              >
-                Our Story <ArrowRight size={18} />
-              </motion.button>
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-              className="flex items-center gap-8 mt-12"
-            >
-              {[['10K+', 'Happy Customers'], ['500+', 'Products'], ['4.9★', 'Rating']].map(([num, label]) => (
-                <div key={label}>
-                  <div className="font-display text-2xl font-bold text-white">{num}</div>
-                  <div className="text-sm text-gray-400">{label}</div>
-                </div>
-              ))}
-            </motion.div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      {/* Hero Section */}
+      <div className="container-custom pt-3 pb-4">
+        <div className="grid md:grid-cols-4 gap-3">
+          {/* Main Banner */}
+          <div className="md:col-span-3"><Banner /></div>
+          {/* Side Banners */}
+          <div className="hidden md:flex flex-col gap-3">
+            <div className="relative h-[calc(50%-6px)] rounded overflow-hidden bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => navigate('/products?featured=true')}>
+              <div className="text-center text-white p-4">
+                <Zap size={28} className="mx-auto mb-1" />
+                <p className="font-bold text-sm">Flash Sale</p>
+                <p className="text-xs opacity-80">Limited time deals</p>
+              </div>
+            </div>
+            <div className="relative h-[calc(50%-6px)] rounded overflow-hidden bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => navigate('/products')}>
+              <div className="text-center text-white p-4">
+                <ShoppingBag size={28} className="mx-auto mb-1" />
+                <p className="font-bold text-sm">New Arrivals</p>
+                <p className="text-xs opacity-80">Shop latest items</p>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Slide indicators */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-          {HERO_IMAGES.map((_, i) => (
-            <button key={i} onClick={() => setHeroIdx(i)}
-              className={`h-1 rounded-full transition-all duration-300 ${i === heroIdx ? 'w-8 bg-primary-500' : 'w-2 bg-white/30'}`}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ─── Features Bar ─────────────────────────────────────────────────── */}
-      <section className="bg-primary-500">
-        <div className="container-custom py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <motion.div key={f.title} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-                className="flex items-center gap-3 py-2"
-              >
-                <div className="text-white/80">{f.icon}</div>
+      {/* Features Bar */}
+      <div className="bg-white dark:bg-gray-900 border-y border-gray-200 dark:border-gray-800">
+        <div className="container-custom py-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {FEATURES.map(f => (
+              <div key={f.title} className="flex items-center gap-2.5">
+                {f.icon}
                 <div>
-                  <p className="text-white font-semibold text-sm">{f.title}</p>
-                  <p className="text-white/70 text-xs">{f.desc}</p>
+                  <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{f.title}</p>
+                  <p className="text-[10px] text-gray-500">{f.sub}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ─── Categories ───────────────────────────────────────────────────── */}
-      <section className="py-20">
-        <div className="container-custom">
-          <SectionHeader eyebrow="Browse By" title="Shop Categories" subtitle="Find exactly what you're looking for from our curated collections." />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
-            {(loading ? Array(4).fill(null) : categories).map((cat, i) => (
-              cat ? (
-                <motion.div key={cat._id} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.08 }} viewport={{ once: true }}
-                  whileHover={{ y: -6 }}
-                >
-                  <Link to={`/products?category=${cat._id}`}
-                    className="group relative block rounded-2xl overflow-hidden aspect-[4/3] bg-gray-100 dark:bg-gray-800"
-                  >
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <div className="text-3xl mb-1">{cat.icon}</div>
-                      <h3 className="font-display text-xl font-bold text-white">{cat.name}</h3>
-                      <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
-                        Shop now <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                      </p>
-                    </div>
-                  </Link>
-                </motion.div>
-              ) : (
-                <div key={i} className="skeleton rounded-2xl aspect-[4/3]" />
-              )
+      <div className="container-custom py-4 space-y-5">
+        {/* Categories */}
+        <div className="bg-white dark:bg-gray-900 rounded p-4 border border-gray-200 dark:border-gray-800">
+          <SectionHeader title="Shop by Category" link="/products" />
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mt-3">
+            {CATEGORIES.map(cat => (
+              <Link key={cat.name} to={`/products?category=${cat.name}`}
+                className={`${cat.color} rounded p-2 text-center hover:shadow-md transition-all hover:-translate-y-0.5`}>
+                <div className="text-2xl mb-1">{cat.icon}</div>
+                <p className={`text-[10px] font-semibold ${cat.text} leading-tight`}>{cat.name}</p>
+              </Link>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* ─── Featured Products ─────────────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-900/50">
-        <div className="container-custom">
-          <div className="flex items-end justify-between mb-10">
-            <SectionHeader eyebrow="Hand Picked" title="Featured Products" subtitle="Our most loved items, curated for you." centered={false} />
-            <Link to="/products?featured=true" className="hidden md:flex items-center gap-2 text-primary-500 font-semibold hover:gap-3 transition-all">
-              View All <ArrowRight size={18} />
+        {/* Flash Sale */}
+        <div className="bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div className="bg-primary-500 px-4 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Zap size={18} className="text-yellow-300 fill-yellow-300" />
+              <span className="text-white font-bold text-sm">FLASH SALE</span>
+              <FlashTimer />
+            </div>
+            <Link to="/products?featured=true" className="text-white text-xs font-semibold hover:underline">
+              See All &rsaquo;
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {loading
-              ? Array(8).fill(null).map((_, i) => <SkeletonCard key={i} />)
-              : featured.slice(0, 8).map((product, i) => <ProductCard key={product._id} product={product} index={i} />)
-            }
-          </div>
-          <div className="text-center mt-10 md:hidden">
-            <Link to="/products" className="btn-secondary">View All Products</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Banner ───────────────────────────────────────────────────────── */}
-      <section className="py-20">
-        <div className="container-custom">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="relative rounded-3xl overflow-hidden bg-gray-950 min-h-[300px] flex items-center"
-          >
-            <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1400" alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-950 to-transparent" />
-            <div className="relative z-10 p-10 md:p-16 max-w-xl">
-              <span className="badge bg-primary-500 text-white mb-4">Limited Offer</span>
-              <h2 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
-                Up to <span className="text-primary-400">50% Off</span><br />on Electronics
-              </h2>
-              <p className="text-gray-300 mb-6">Shop the biggest sale of the season. Limited stock available.</p>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/products?category=electronics')}
-                className="btn-primary flex items-center gap-2"
-              >
-                Shop Electronics <ArrowRight size={18} />
-              </motion.button>
+          <div className="p-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {loading
+                ? Array(5).fill(null).map((_, i) => <SkeletonCard key={i} />)
+                : featured.slice(0, 10).map((p, i) => <ProductCard key={p._id} product={p} index={i} />)
+              }
             </div>
-          </motion.div>
+          </div>
         </div>
-      </section>
 
-      {/* ─── Testimonials ─────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-900/50">
-        <div className="container-custom">
-          <SectionHeader eyebrow="Reviews" title="What Our Customers Say" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+        {/* Promo Banners */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { bg: 'from-blue-500 to-cyan-500', emoji: '💻', title: 'Electronics', sub: 'Best gadgets', link: '/products?category=Electronics' },
+            { bg: 'from-pink-500 to-rose-500', emoji: '👗', title: 'Fashion', sub: 'Trendy styles', link: '/products?category=Fashion' },
+            { bg: 'from-green-500 to-teal-500', emoji: '🏠', title: 'Home & Living', sub: 'Cozy essentials', link: '/products?category=Home' },
+          ].map(b => (
+            <Link key={b.title} to={b.link}
+              className={`bg-gradient-to-r ${b.bg} rounded p-5 text-white flex items-center gap-4 hover:opacity-90 transition-opacity`}>
+              <span className="text-4xl">{b.emoji}</span>
+              <div>
+                <p className="font-bold">{b.title}</p>
+                <p className="text-xs opacity-80">{b.sub}</p>
+                <p className="text-xs font-semibold mt-1 underline">Shop Now &rsaquo;</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* New Arrivals */}
+        <div className="bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div className="bg-gray-800 dark:bg-gray-950 px-4 py-2.5 flex items-center justify-between">
+            <span className="text-white font-bold text-sm">✨ NEW ARRIVALS</span>
+            <Link to="/products?sort=newest" className="text-gray-300 text-xs hover:text-white hover:underline">See All &rsaquo;</Link>
+          </div>
+          <div className="p-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {loading
+                ? Array(5).fill(null).map((_, i) => <SkeletonCard key={i} />)
+                : newArrivals.slice(0, 10).map((p, i) => <ProductCard key={p._id} product={p} index={i} />)
+              }
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 p-4">
+          <SectionHeader title="What Customers Say" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
             {[
-              { name: 'Priya Shrestha', role: 'Verified Buyer', text: 'Absolutely love SabaiSale! Super fast delivery and the products are exactly as described. Will definitely shop again!', rating: 5 },
-              { name: 'Arjun Thapa', role: 'Verified Buyer', text: 'Best shopping experience in Nepal. The MacBook I ordered arrived in perfect condition and ahead of schedule!', rating: 5 },
-              { name: 'Sita Maharjan', role: 'Verified Buyer', text: 'Amazing selection and incredible customer service. They helped me pick the perfect gift for my husband.', rating: 5 },
+              { name: 'Priya S.', text: 'Super fast delivery! Got my order in 2 days. Quality is excellent.', rating: 5 },
+              { name: 'Arjun T.', text: 'Best online shopping experience in Nepal. Will definitely shop again!', rating: 5 },
+              { name: 'Sita M.', text: 'Great products and amazing customer service. Highly recommended!', rating: 5 },
             ].map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-                className="card p-6"
-              >
-                <div className="flex mb-3">
-                  {Array(t.rating).fill(null).map((_, j) => <Star key={j} size={14} className="text-amber-400 fill-amber-400" />)}
+              <div key={i} className="bg-gray-50 dark:bg-gray-800 rounded p-3">
+                <div className="flex mb-1.5">
+                  {Array(t.rating).fill(null).map((_, j) => <span key={j} className="text-yellow-400 text-xs">★</span>)}
                 </div>
-                <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-4">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-500 font-bold text-sm">
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-[var(--text)]">{t.name}</p>
-                    <p className="text-xs text-[var(--text-muted)]">{t.role}</p>
-                  </div>
-                </div>
-              </motion.div>
+                <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">"{t.text}"</p>
+                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">— {t.name}</p>
+              </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Footer Banner */}
+      <div className="bg-primary-500 mt-4">
+        <div className="container-custom py-8 text-center text-white">
+          <h2 className="text-xl font-bold mb-1">Download Our App</h2>
+          <p className="text-sm text-white/80 mb-4">Shop on the go — available soon on iOS & Android</p>
+          <div className="flex gap-3 justify-center">
+            <div className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 text-xs font-semibold cursor-pointer hover:bg-gray-900">
+              🍎 App Store
+            </div>
+            <div className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 text-xs font-semibold cursor-pointer hover:bg-gray-900">
+              🤖 Google Play
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
