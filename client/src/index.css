@@ -11,8 +11,8 @@
     --border: #e0e0e0;
     --primary: #ee4d2d;
     --primary-dark: #d73211;
-    --secondary: #ff6633;
   }
+
   .dark {
     --bg: #111111;
     --bg-card: #1e1e1e;
@@ -22,59 +22,154 @@
     --primary: #ee4d2d;
     --primary-dark: #ff6633;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { overflow-x: hidden; }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-[var(--bg)] text-[var(--text)] font-body;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #f1f1f1; }
-  ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold
-           px-5 py-2.5 rounded transition-all duration-200 active:scale-95
-           disabled:opacity-50 disabled:cursor-not-allowed text-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ee4d2d;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
   }
+  .btn-primary:hover { background-color: #d73211; }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .btn-secondary {
-    @apply bg-white border border-[var(--primary)] text-[var(--primary)]
-           hover:bg-orange-50 font-semibold px-5 py-2.5 rounded
-           transition-all duration-200 active:scale-95 text-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    color: #ee4d2d;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    border: 1px solid #ee4d2d;
+    transition: all 0.2s;
+    cursor: pointer;
   }
+  .btn-secondary:hover { background-color: #fff5f3; }
+
   .btn-ghost {
-    @apply bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700
-           text-[var(--text)] font-medium px-4 py-2 rounded transition-all duration-200 text-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    border: none;
+    transition: all 0.2s;
+    cursor: pointer;
   }
+  .btn-ghost:hover { background-color: #e5e7eb; }
+
   .card {
-    @apply bg-[var(--bg-card)] rounded shadow-sm border border-[var(--border)];
+    background-color: var(--bg-card);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
+
   .input-field {
-    @apply w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-[var(--border)]
-           rounded text-[var(--text)] placeholder-gray-400
-           focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]
-           transition-all duration-200 text-sm;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    outline: none;
   }
+  .input-field:focus {
+    border-color: #ee4d2d;
+    box-shadow: 0 0 0 1px #ee4d2d;
+  }
+  .input-field::placeholder {
+    color: #9ca3af;
+  }
+
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
   }
+
   .skeleton {
-    @apply bg-gray-200 dark:bg-gray-800 rounded animate-pulse;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
   }
+
   .container-custom {
-    @apply max-w-7xl mx-auto px-3 sm:px-4 lg:px-6;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 12px;
   }
-  .section-title {
-    @apply text-lg font-bold text-[var(--text)];
+
+  @media (min-width: 640px) {
+    .container-custom { padding: 0 16px; }
   }
+
+  @media (min-width: 1024px) {
+    .container-custom { padding: 0 24px; }
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Flash sale timer */
 .flash-timer {
-  background: #ee4d2d;
+  background: #1a1a1a;
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
@@ -82,11 +177,48 @@
   font-size: 14px;
   min-width: 32px;
   text-align: center;
+  font-family: monospace;
 }
 
-/* Product card hover */
-.product-card:hover { transform: translateY(-2px); }
+/* Product card */
+.product-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
 
-/* Daraz-style category scroll */
-.category-scroll { scrollbar-width: none; }
-.category-scroll::-webkit-scrollbar { display: none; }
+/* Hide scrollbar for category bar */
+.category-scroll {
+  scrollbar-width: none;
+}
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Dark mode inputs */
+.dark .input-field {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}

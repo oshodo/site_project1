@@ -31,7 +31,14 @@ export function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await login(form);
-    if (res.success) navigate(from, { replace: true });
+    if (res.success) {
+      // Admin भए admin panel मा redirect गर्नुस्
+      if (res.user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    }
   };
 
   return (
@@ -89,17 +96,6 @@ export function Login() {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Demo */}
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded text-xs">
-            <p className="font-semibold text-amber-700 mb-1.5">🔑 Demo Login:</p>
-            <div className="flex gap-2">
-              <button onClick={() => setForm({ email: 'someone@something.com', password: 'password' })}
-                className="flex-1 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded font-medium transition-colors">
-                Try Admin
-              </button>
-            </div>
-          </div>
 
           <p className="text-center text-xs text-gray-500 mt-4">
             Don't have an account?{' '}
