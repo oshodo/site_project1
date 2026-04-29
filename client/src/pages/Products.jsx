@@ -26,7 +26,6 @@ export default function Products() {
   const [categories, setCategories] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
 
@@ -44,17 +43,13 @@ export default function Products() {
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const params = {};
       Object.entries(filters).forEach(([k, v]) => { if (v) params[k] = v; });
       const { data } = await productsAPI.getAll(params);
       setProducts(data.products || []);
       setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
-    } catch (err) {
-      setProducts([]);
-      setError(err?.response?.data?.message || 'Server connect garna sakiyena. Backend running cha ki? Local ma: cd server && npm run dev');
-    } finally { setLoading(false); }
+    } catch { setProducts([]); } finally { setLoading(false); }
   }, [filters]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
@@ -209,14 +204,6 @@ export default function Products() {
             {loading ? (
               <div className={`grid gap-3 ${viewMode==='grid' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
                 {Array(12).fill(null).map((_, i) => <SkeletonCard key={i}/>)}
-              </div>
-            ) : error ? (
-              <div className="bg-white dark:bg-gray-800 rounded border border-red-200 dark:border-red-800 text-center py-16 px-4">
-                <div className="text-4xl mb-3">⚠️</div>
-                <h3 className="font-bold text-red-600 dark:text-red-400 mb-2">Products load garna sakiyena</h3>
-                <p className="text-xs text-gray-500 mb-1 max-w-sm mx-auto">{error}</p>
-                <p className="text-xs text-gray-400 mb-4">Render free tier sleep garauna sakcha — ek-dui minute lagcha wake up huna.</p>
-                <button onClick={fetchProducts} className="btn-primary text-xs py-2 px-5">🔄 Pheri try gara</button>
               </div>
             ) : products.length === 0 ? (
               <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 text-center py-16 px-4">

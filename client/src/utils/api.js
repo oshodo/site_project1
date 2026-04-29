@@ -4,7 +4,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'https://sabaisales.onrender.co
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000, // Render free tier wake up huna 30-60 sec lagcha
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 
