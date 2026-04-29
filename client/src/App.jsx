@@ -26,11 +26,8 @@ import NotFound from './pages/NotFound';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
-import { AdminOrders } from './pages/admin/Orders';
-import { AdminUsers } from './pages/admin/Orders';
-import { AdminCategories } from './pages/admin/Orders';
-import { AdminFounders } from './pages/admin/Orders';
 import Analytics from './pages/admin/Analytics';
+import { AdminOrders, AdminUsers, AdminCategories, AdminFounders } from './pages/admin/Orders';
 
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn } = useAuthStore();
@@ -45,7 +42,9 @@ const AdminRoute = ({ children }) => {
 };
 
 const Layout = ({ children }) => <><Navbar />{children}<Footer /></>;
-const ProtectedLayout = ({ children }) => <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>;
+const ProtectedLayout = ({ children }) => (
+  <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>
+);
 
 export default function App() {
   const { init } = useThemeStore();
@@ -53,19 +52,17 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Toaster position="top-right" toastOptions={{
-        duration: 3000,
-        style: {
-          fontFamily: 'DM Sans, sans-serif',
-          borderRadius: '12px',
-          background: 'var(--bg-card)',
-          color: 'var(--text)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-        },
-        success: { iconTheme: { primary: '#f17012', secondary: '#fff' } },
-      }} />
-
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            fontFamily: 'Inter, sans-serif',
+            borderRadius: '8px',
+            fontSize: '13px',
+          },
+        }}
+      />
       <Routes>
         {/* Public */}
         <Route path="/" element={<Layout><Home /></Layout>} />

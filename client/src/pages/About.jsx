@@ -75,8 +75,8 @@ export default function About() {
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {(founders.length > 0 ? founders : [
-              { name: 'Jeevan Shakya', role: 'CEO & Co-Founder', bio: 'Visionary entrepreneur with a passion for connecting Nepali consumers with premium products.', image: 'https://raw.githubusercontent.com/oshodo/site_project1/main/jeevan.jpg', social: {} },
-              { name: 'Sabin Subedi', role: 'CTO & Co-Founder', bio: 'Full-stack developer who built SabaiSale from the ground up. Passionate about seamless digital experiences.', image: 'https://raw.githubusercontent.com/oshodo/site_project1/main/sabin.jpg', social: {} },
+              { name: 'Jeevan Don', role: 'CEO & Co-Founder', bio: 'Visionary entrepreneur with a passion for connecting Nepali consumers with premium products.', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400', social: {} },
+              { name: 'Sabai Lama', role: 'CTO & Co-Founder', bio: 'Full-stack developer who built SabaiSale from the ground up. Passionate about seamless digital experiences.', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400', social: {} },
             ]).map((founder, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }} viewport={{ once: true }}

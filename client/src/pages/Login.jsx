@@ -94,7 +94,7 @@ export function Login() {
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded text-xs">
             <p className="font-semibold text-amber-700 mb-1.5">🔑 Demo Login:</p>
             <div className="flex gap-2">
-              <button onClick={() => setForm({ email: 'someone@something.com', password: 'password' })}
+              <button onClick={() => setForm({ email: 'jeevan@sabaisale.com', password: 'Jeevan@Sabaisale' })}
                 className="flex-1 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded font-medium transition-colors">
                 Try Admin
               </button>

@@ -16,6 +16,7 @@ export default {
           700: '#b5260d',
           800: '#931f0e',
           900: '#791a0d',
+          950: '#3d0b06',
         },
       },
       fontFamily: {
@@ -28,7 +29,7 @@ export default {
         'slide-up': 'slideUp 0.3s ease-out',
       },
       keyframes: {
-        shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+        shimmer: { '0%': { opacity: 0.5 }, '50%': { opacity: 1 }, '100%': { opacity: 0.5 } },
         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
         slideUp: { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
       },
