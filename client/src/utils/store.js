@@ -18,7 +18,7 @@ export const useAuthStore = create(
           localStorage.setItem('sabai_token', data.token);
           set({ user: data.user, token: data.token, isLoading: false });
           toast.success(`Welcome back, ${data.user.name}! 👋`);
-          return { success: true };
+          return { success: true, user: data.user };
         } catch (err) {
           set({ isLoading: false });
           const msg = err.response?.data?.message || 'Login failed';
@@ -34,7 +34,7 @@ export const useAuthStore = create(
           localStorage.setItem('sabai_token', data.token);
           set({ user: data.user, token: data.token, isLoading: false });
           toast.success(`Welcome to SabaiSale, ${data.user.name}! 🎉`);
-          return { success: true };
+          return { success: true, user: data.user };
         } catch (err) {
           set({ isLoading: false });
           const msg = err.response?.data?.message || 'Registration failed';

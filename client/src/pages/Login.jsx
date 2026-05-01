@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../utils/store';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://sabaisales.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://sabaisale.onrender.com/api';
 
 function GoogleButton({ label }) {
   return (

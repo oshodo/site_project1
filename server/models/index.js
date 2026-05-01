@@ -10,34 +10,30 @@ const categorySchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-categorySchema.pre('save', function (next) {
-  if (this.isModified('name')) {
-    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  }
+categorySchema.pre('save', function(next) {
+  if (this.isModified('name')) this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   next();
 });
-
 const Category = mongoose.model('Category', categorySchema);
 
 // ─── Order ────────────────────────────────────────────────────────────────────
+const timelineSchema = new mongoose.Schema({
+  status: String,
+  message: String,
+  date: { type: Date, default: Date.now },
+});
+
 const orderItemSchema = new mongoose.Schema({
-  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  name: String,
-  image: String,
-  price: Number,
-  quantity: { type: Number, required: true, min: 1 },
+  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  name: String, image: String, price: Number, quantity: Number,
 });
 
 const orderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   items: [orderItemSchema],
   shippingAddress: {
-    fullName: String,
-    address: String,
-    city: String,
-    postalCode: String,
-    country: String,
-    phone: String,
+    fullName: String, address: String, city: String,
+    postalCode: String, country: String, phone: String,
   },
   paymentMethod: { type: String, default: 'Cash on Delivery' },
   paymentResult: { id: String, status: String, email: String },
@@ -50,10 +46,16 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
     default: 'pending',
   },
+  timeline: [timelineSchema],
+  trackingNumber: String,
+  carrier: String,
+  estimatedDelivery: Date,
   isPaid: { type: Boolean, default: false },
   paidAt: Date,
   isDelivered: { type: Boolean, default: false },
   deliveredAt: Date,
+  shippedAt: Date,
+  notes: String,
 }, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema);
@@ -68,11 +70,9 @@ const reviewSchema = new mongoose.Schema({
   helpful: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
-// One review per user per product
 reviewSchema.index({ user: 1, product: 1 }, { unique: true });
 
-// Update product rating after review save/delete
-reviewSchema.post('save', async function () {
+reviewSchema.post('save', async function() {
   const Product = mongoose.model('Product');
   const stats = await mongoose.model('Review').aggregate([
     { $match: { product: this.product } },

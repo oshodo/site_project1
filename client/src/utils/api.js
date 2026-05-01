@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://sabaisales.onrender.com/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://sabaisale.onrender.com/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -55,6 +55,7 @@ export const ordersAPI = {
   getById: (id) => api.get(`/orders/${id}`),
   getAllAdmin: () => api.get('/orders'),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+  updateTracking: (id, data) => api.put(`/orders/${id}/tracking`, data),
 };
 
 export const cartAPI = {
