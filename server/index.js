@@ -1,52 +1,56 @@
 // ============================================================
-// server/index.js — Main Express Application Entry Point
+// server/index.js  —  Main Express Application
 // ============================================================
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const express    = require('express');
+const mongoose   = require('mongoose');
+const cors       = require('cors');
+const helmet     = require('helmet');
+const morgan     = require('morgan');
+const rateLimit  = require('express-rate-limit');
+const passport   = require('./config/passport');
 require('dotenv').config();
 
 const app = express();
 
-// ─── Security Middleware ─────────────────────────────────────
+// ── Security headers ──────────────────────────────────────────
 app.use(helmet());
 
-// Rate limiting — 100 requests per 15 minutes per IP
+// ── Rate limiting ─────────────────────────────────────────────
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 200,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api/', limiter);
 
-// ─── CORS ────────────────────────────────────────────────────
+// ── CORS ──────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:5173',
+    'http://localhost:3000',
+  ],
   credentials: true,
 }));
 
-// ─── Body Parsers ────────────────────────────────────────────
+// ── Body parsers ──────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ─── HTTP Logger (only in development) ──────────────────────
-if (process.env.NODE_ENV === 'development') {
+// ── Passport (for Google OAuth — stateless, no session) ───────
+app.use(passport.initialize());
+
+// ── HTTP logger (dev only) ────────────────────────────────────
+if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// ─── Database Connection ─────────────────────────────────────
+// ── MongoDB ───────────────────────────────────────────────────
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch((err) => {
-    console.error('❌ MongoDB Connection Error:', err.message);
-    process.exit(1);
-  });
+  .then(() => console.log('✅  MongoDB connected'))
+  .catch((err) => { console.error('❌  MongoDB error:', err.message); process.exit(1); });
 
-// ─── Route Imports ───────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────
 app.use('/api/auth',       require('./routes/auth'));
 app.use('/api/products',   require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
@@ -57,27 +61,26 @@ app.use('/api/cart',       require('./routes/cart'));
 app.use('/api/upload',     require('./routes/upload'));
 app.use('/api/admin',      require('./routes/admin'));
 
-// ─── Health Check ────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date() }));
+// ── Health check ──────────────────────────────────────────────
+app.get('/health', (_req, res) => res.json({ status: 'OK', time: new Date() }));
 
-// ─── 404 Handler ─────────────────────────────────────────────
+// ── 404 ───────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
 
-// ─── Global Error Handler ────────────────────────────────────
-app.use((err, req, res, next) => {
+// ── Global error handler ──────────────────────────────────────
+app.use((err, _req, res, _next) => {
   console.error(`[ERROR] ${err.stack}`);
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
+  res.status(err.statusCode || 500).json({
     success: false,
     message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
   });
 });
 
-// ─── Start Server ────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
+app.listen(PORT, () =>
+  console.log(`🚀  Server running on http://localhost:${PORT}`)
+);

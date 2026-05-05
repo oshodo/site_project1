@@ -1,11 +1,11 @@
 // ============================================================
-// server/controllers/orderController.js
+// server/controllers/orderController.js  —  BUG FIXED VERSION
 // ============================================================
 const asyncHandler = require('express-async-handler');
-const Order = require('../models/Order');
+const Order   = require('../models/Order');
 const Product = require('../models/Product');
 
-// ─── POST /api/orders — Place a new order ────────────────────
+// ── POST /api/orders ──────────────────────────────────────────
 const createOrder = asyncHandler(async (req, res) => {
   const { items, shippingAddress, paymentMethod, notes } = req.body;
 
@@ -14,40 +14,37 @@ const createOrder = asyncHandler(async (req, res) => {
     throw new Error('No order items provided');
   }
 
-  // Validate each product and compute real prices from DB (never trust client prices)
   let subtotal = 0;
   const validatedItems = [];
 
   for (const item of items) {
     const product = await Product.findById(item.product);
-
     if (!product || !product.isActive) {
       res.status(404);
       throw new Error(`Product not found: ${item.product}`);
     }
     if (product.stock < item.quantity) {
       res.status(400);
-      throw new Error(`Insufficient stock for ${product.name}`);
+      throw new Error(`Insufficient stock for "${product.name}". Only ${product.stock} left.`);
     }
 
-    const lineTotal = product.price * item.quantity;
-    subtotal += lineTotal;
+    subtotal += product.price * item.quantity;
 
     validatedItems.push({
       product:  product._id,
       name:     product.name,
-      price:    product.price,
+      price:    product.price,       // snapshot at order time
       quantity: item.quantity,
       image:    product.images?.[0]?.url || '',
     });
 
-    // Decrement stock
+    // Decrement stock immediately
     product.stock -= item.quantity;
     await product.save({ validateBeforeSave: false });
   }
 
-  const shippingPrice = subtotal >= 2000 ? 0 : 100; // Free shipping over NPR 2000
-  const taxPrice      = Math.round(subtotal * 0.13); // 13% VAT (Nepal)
+  const shippingPrice = subtotal >= 2000 ? 0 : 100;
+  const taxPrice      = Math.round(subtotal * 0.13);
   const totalPrice    = subtotal + shippingPrice + taxPrice;
 
   const order = await Order.create({
@@ -66,7 +63,7 @@ const createOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: order });
 });
 
-// ─── GET /api/orders/my — Current user's orders ──────────────
+// ── GET /api/orders/my ────────────────────────────────────────
 const getMyOrders = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
@@ -87,7 +84,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
   });
 });
 
-// ─── GET /api/orders/:id — Single order detail ───────────────
+// ── GET /api/orders/:id ───────────────────────────────────────
 const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id)
     .populate('user', 'name email')
@@ -110,14 +107,15 @@ const getOrderById = asyncHandler(async (req, res) => {
   res.json({ success: true, data: order });
 });
 
-// ─── PUT /api/orders/:id/status — Admin updates order status ─
+// ── PUT /api/orders/:id/status  (Admin) ──────────────────────
+// BUG FIX: save previousStatus BEFORE mutating order.status
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { status, note, trackingNumber } = req.body;
 
   const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
   if (!validStatuses.includes(status)) {
     res.status(400);
-    throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    throw new Error(`Invalid status. Allowed: ${validStatuses.join(', ')}`);
   }
 
   const order = await Order.findById(req.params.id);
@@ -126,22 +124,46 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     throw new Error('Order not found');
   }
 
-  // Prevent moving backward in status (unless cancelling)
-  const statusOrder = { Pending: 0, Processing: 1, Shipped: 2, Delivered: 3, Cancelled: 4 };
-  if (
-    status !== 'Cancelled' &&
-    statusOrder[status] < statusOrder[order.status]
-  ) {
+  // ─── SAVE PREVIOUS STATUS BEFORE ANY MUTATION ────────────
+  const previousStatus = order.status;
+
+  // Prevent moving backward (except Cancelled)
+  const statusRank = { Pending: 0, Processing: 1, Shipped: 2, Delivered: 3, Cancelled: 99 };
+  if (status !== 'Cancelled' && statusRank[status] < statusRank[previousStatus]) {
     res.status(400);
-    throw new Error(`Cannot move order back from "${order.status}" to "${status}"`);
+    throw new Error(`Cannot move order back from "${previousStatus}" to "${status}"`);
   }
 
+  // Prevent double-cancellation
+  if (previousStatus === 'Cancelled' && status === 'Cancelled') {
+    res.status(400);
+    throw new Error('Order is already cancelled');
+  }
+
+  // Prevent changes to delivered orders (unless admin explicitly cancels)
+  if (previousStatus === 'Delivered' && status !== 'Cancelled') {
+    res.status(400);
+    throw new Error('Delivered orders cannot be modified');
+  }
+
+  // Update fields
   order.status = status;
-  if (note) order.statusHistory[order.statusHistory.length - 1].note = note;
   if (trackingNumber) order.trackingNumber = trackingNumber;
 
-  // If cancelled, restore stock
-  if (status === 'Cancelled' && order.status !== 'Cancelled') {
+  // Add note to the latest history entry (will be pushed by pre-save hook)
+  // The hook pushes the new status; we add the note after save manually
+  const saved = await order.save();
+
+  // Attach note to the last history entry
+  if (note) {
+    const last = saved.statusHistory[saved.statusHistory.length - 1];
+    last.note = note;
+    await saved.save();
+  }
+
+  // ─── RESTORE STOCK if newly cancelled ────────────────────
+  // Uses previousStatus (captured before mutation) — the real fix
+  if (status === 'Cancelled' && previousStatus !== 'Cancelled') {
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: item.quantity },
@@ -149,15 +171,14 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     }
   }
 
-  const updated = await order.save();
-  res.json({ success: true, data: updated });
+  const final = await Order.findById(order._id).populate('user', 'name email');
+  res.json({ success: true, data: final });
 });
 
-// ─── GET /api/orders — Admin: all orders ─────────────────────
+// ── GET /api/orders  (Admin — all orders) ────────────────────
 const getAllOrders = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, status } = req.query;
-  const skip = (Number(page) - 1) * Number(limit);
-
+  const skip  = (Number(page) - 1) * Number(limit);
   const query = status ? { status } : {};
 
   const [orders, total] = await Promise.all([
@@ -177,6 +198,5 @@ const getAllOrders = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  createOrder, getMyOrders, getOrderById,
-  updateOrderStatus, getAllOrders,
+  createOrder, getMyOrders, getOrderById, updateOrderStatus, getAllOrders,
 };

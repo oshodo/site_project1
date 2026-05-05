@@ -2,42 +2,68 @@
 // server/controllers/authController.js
 // ============================================================
 const asyncHandler = require('express-async-handler');
-const User = require('../models/User');
+const User         = require('../models/User');
 const { generateToken } = require('../middleware/auth');
 
-// ─── POST /api/auth/register ──────────────────────────────────
+// Emails that are automatically granted admin on registration
+const ADMIN_EMAILS = ['jeevan808078018@gmail.com'];
+
+// ── POST /api/auth/register ───────────────────────────────────
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // Check duplicate email
-  const existing = await User.findOne({ email });
-  if (existing) {
+  if (!name || !email || !password) {
     res.status(400);
-    throw new Error('Email already registered');
+    throw new Error('Name, email, and password are required');
   }
 
-  const user = await User.create({ name, email, password });
+  const existing = await User.findOne({ email: email.toLowerCase() });
+  if (existing) {
+    res.status(400);
+    throw new Error('Email already registered. Please login.');
+  }
+
+  // Auto-grant admin role to privileged emails
+  const role = ADMIN_EMAILS.includes(email.toLowerCase()) ? 'admin' : 'user';
+
+  const user = await User.create({ name, email, password, role });
 
   res.status(201).json({
     success: true,
     data: {
-      _id:   user._id,
-      name:  user.name,
-      email: user.email,
-      role:  user.role,
-      token: generateToken(user._id),
+      _id:    user._id,
+      name:   user.name,
+      email:  user.email,
+      role:   user.role,
+      avatar: user.avatar,
+      token:  generateToken(user._id),
     },
   });
 });
 
-// ─── POST /api/auth/login ─────────────────────────────────────
+// ── POST /api/auth/login ──────────────────────────────────────
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // select('+password') because password has select:false in schema
-  const user = await User.findOne({ email }).select('+password');
+  if (!email || !password) {
+    res.status(400);
+    throw new Error('Email and password are required');
+  }
 
-  if (!user || !(await user.comparePassword(password))) {
+  const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
+  if (!user) {
+    res.status(401);
+    throw new Error('Invalid email or password');
+  }
+
+  // Google-only account — no password set
+  if (!user.password) {
+    res.status(401);
+    throw new Error('This account uses Google Sign-In. Please continue with Google.');
+  }
+
+  if (!(await user.comparePassword(password))) {
     res.status(401);
     throw new Error('Invalid email or password');
   }
@@ -47,7 +73,6 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Account deactivated. Contact support.');
   }
 
-  // Update last login timestamp
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
@@ -64,36 +89,37 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
-// ─── GET /api/auth/me ─────────────────────────────────────────
+// ── GET /api/auth/me ──────────────────────────────────────────
 const getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate('wishlist', 'name price images');
+  const user = await User.findById(req.user._id)
+    .populate('wishlist', 'name price images');
   res.json({ success: true, data: user });
 });
 
-// ─── PUT /api/auth/profile ────────────────────────────────────
+// ── PUT /api/auth/profile ─────────────────────────────────────
 const updateProfile = asyncHandler(async (req, res) => {
   const { name, phone, address, avatar } = req.body;
-
   const user = await User.findByIdAndUpdate(
     req.user._id,
     { name, phone, address, avatar },
     { new: true, runValidators: true }
   );
-
   res.json({ success: true, data: user });
 });
 
-// ─── PUT /api/auth/change-password ───────────────────────────
+// ── PUT /api/auth/change-password ────────────────────────────
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-
   const user = await User.findById(req.user._id).select('+password');
 
+  if (!user.password) {
+    res.status(400);
+    throw new Error('Google accounts cannot set a password here.');
+  }
   if (!(await user.comparePassword(currentPassword))) {
     res.status(400);
     throw new Error('Current password is incorrect');
   }
-
   user.password = newPassword;
   await user.save();
 

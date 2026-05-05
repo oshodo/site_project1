@@ -1,197 +1,236 @@
-# 🛍️ SabaiSale — Production eCommerce Platform
-
-A full-stack MERN eCommerce platform built for Nepal with admin dashboard, Cloudinary image uploads, order tracking, JWT authentication, and more.
+# 🛍️ SabaiSale — Complete Setup & Deployment Guide
 
 ---
 
-## 🚀 Quick Start (3 Steps)
+## 🔧 STEP 1 — Install Node.js
 
-### Step 1 — Install dependencies
+1. Go to https://nodejs.org
+2. Download **LTS version** (e.g. 20.x)
+3. Install it — keep clicking Next
+4. Open Terminal (Mac) or Command Prompt (Windows) and verify:
+   ```
+   node -v
+   npm -v
+   ```
+   Both should print a version number.
+
+---
+
+## 🍃 STEP 2 — Set up MongoDB Atlas (Free Database)
+
+1. Go to https://mongodb.com/atlas and click **"Try Free"**
+2. Sign up with your Google account
+3. Choose **FREE M0 tier** → pick any region → Create Cluster
+4. In left sidebar → **"Database Access"** → Add New Database User
+   - Username: `sabaisaleuser`
+   - Password: click "Autogenerate" → **copy the password**
+   - Role: "Atlas Admin" → Add User
+5. In left sidebar → **"Network Access"** → Add IP Address → **"Allow Access from Anywhere"** → Confirm
+6. In left sidebar → **"Database"** → click **"Connect"** on your cluster
+7. Choose **"Connect your application"** → Driver: Node.js
+8. Copy the connection string — it looks like:
+   ```
+   mongodb+srv://sabaisaleuser:PASSWORD@cluster0.xxxxx.mongodb.net/
+   ```
+9. Replace `<password>` with your actual password
+10. Add `sabaisale` before `?`:
+    ```
+    mongodb+srv://sabaisaleuser:PASSWORD@cluster0.xxxxx.mongodb.net/sabaisale?retryWrites=true&w=majority
+    ```
+    **Save this — you need it in Step 5.**
+
+---
+
+## ☁️ STEP 3 — Set up Cloudinary (Free Image Hosting)
+
+1. Go to https://cloudinary.com → **"Sign Up For Free"**
+2. Sign up with your Google account
+3. After login, you land on the Dashboard
+4. You will see these 3 values — **copy all three:**
+   - **Cloud Name** (e.g. `dxyz12345`)
+   - **API Key** (e.g. `123456789012345`)
+   - **API Secret** (e.g. `abcdefghijklmnopqrstuvwxyz12`)
+5. **Save these — you need them in Step 5.**
+
+---
+
+## 🔑 STEP 4 — Set up Google OAuth (for Sign In with Google)
+
+1. Go to https://console.cloud.google.com
+2. Sign in with `jeevan808078018@gmail.com`
+3. At the top, click **"Select a project"** → **"New Project"**
+   - Name: `SabaiSale`
+   - Click **Create**
+4. In the left menu → **"APIs & Services"** → **"OAuth consent screen"**
+   - User Type: **External** → Create
+   - App name: `SabaiSale`
+   - User support email: `jeevan808078018@gmail.com`
+   - Developer contact: `jeevan808078018@gmail.com`
+   - Click **"Save and Continue"** (skip Scopes, skip Test Users)
+   - Click **"Back to Dashboard"**
+5. In left menu → **"Credentials"** → **"+ Create Credentials"** → **"OAuth 2.0 Client IDs"**
+   - Application type: **Web application**
+   - Name: `SabaiSale Web`
+   - **Authorized JavaScript origins:** add `http://localhost:5173`
+   - **Authorized redirect URIs:** add `http://localhost:5000/api/auth/google/callback`
+   - Click **Create**
+6. A popup shows your credentials — **copy both:**
+   - **Client ID** (ends in `.apps.googleusercontent.com`)
+   - **Client Secret**
+7. **Save these — you need them in Step 5.**
+
+---
+
+## ⚙️ STEP 5 — Configure Environment Variables
+
+Open the file `server/.env` in any text editor (Notepad, VS Code, etc.) and fill in all the values:
+
+```
+MONGO_URI=mongodb+srv://sabaisaleuser:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/sabaisale?retryWrites=true&w=majority
+
+JWT_SECRET=SabaiSaleSecretKey2024ChangeMeNow
+
+PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:5173
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+
+ADMIN_EMAIL=admin@sabaisale.com
+ADMIN_PASSWORD=Admin@Sabaisale123
+```
+
+Save the file.
+
+---
+
+## 📦 STEP 6 — Install All Dependencies
+
+Open Terminal / Command Prompt **inside the `sabaisale` folder** and run:
+
 ```bash
 npm run install:all
 ```
 
-### Step 2 — Configure environment variables
+This installs packages for root, server, and client. Takes 1-2 minutes.
 
-**Server** → Edit `server/.env` (already created):
-```
-MONGO_URI=mongodb+srv://USERNAME:PASSWORD@cluster.mongodb.net/sabaisale
-JWT_SECRET=your_random_secret_here
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-```
+---
 
-**Client** → Edit `client/.env`:
-```
-VITE_API_URL=http://localhost:5000/api
-```
+## 🌱 STEP 7 — Seed the Database
 
-### Step 3 — Seed the database + run
 ```bash
-npm run seed     # Creates admin user, categories, and 8 sample products
-npm run dev      # Starts both backend (5000) and frontend (5173)
+npm run seed
 ```
 
-**Admin Login:**
-- URL: http://localhost:5173/admin
-- Email: `admin@sabaisale.com`
-- Password: `Admin@Sabaisale123`
+This creates:
+- ✅ Admin account for `jeevan808078018@gmail.com` (Google login)
+- ✅ Backup admin: `admin@sabaisale.com` / `Admin@Sabaisale123`
+- ✅ 5 product categories
+- ✅ 10 sample products
 
 ---
 
-## 📁 Project Structure
+## 🚀 STEP 8 — Run the App
 
-```
-sabaisale/
-├── package.json               ← Root scripts (concurrently)
-│
-├── server/
-│   ├── .env                   ← ⚠️ Fill with your credentials
-│   ├── index.js               ← Express app entry point
-│   ├── config/
-│   │   └── cloudinary.js      ← Cloudinary + Multer config
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── productController.js
-│   │   ├── orderController.js
-│   │   ├── adminController.js
-│   │   └── uploadController.js
-│   ├── middleware/
-│   │   └── auth.js            ← protect() + adminOnly() JWT middleware
-│   ├── models/
-│   │   ├── User.js            ← role: user | admin
-│   │   ├── Product.js         ← images[], reviews[], stock
-│   │   ├── Order.js           ← status history, VAT, shipping
-│   │   └── Category.js
-│   ├── routes/
-│   │   ├── auth.js            ← /api/auth/*
-│   │   ├── products.js        ← /api/products/*
-│   │   ├── orders.js          ← /api/orders/*
-│   │   ├── admin.js           ← /api/admin/* (admin only)
-│   │   ├── upload.js          ← /api/upload (Cloudinary)
-│   │   ├── categories.js
-│   │   ├── reviews.js
-│   │   ├── wishlist.js
-│   │   └── cart.js
-│   └── utils/
-│       └── seeder.js          ← Run with: npm run seed
-│
-└── client/
-    ├── .env                   ← VITE_API_URL
-    ├── index.html
-    ├── vite.config.js
-    ├── tailwind.config.js
-    └── src/
-        ├── main.jsx
-        ├── App.jsx            ← All routes including admin
-        ├── index.css          ← Tailwind + custom classes
-        ├── utils/
-        │   ├── api.js         ← All Axios API calls
-        │   └── store.js       ← Zustand: auth, cart, wishlist, theme
-        ├── components/
-        │   └── common/
-        │       ├── Navbar.jsx
-        │       ├── Footer.jsx
-        │       ├── ProductCard.jsx
-        │       ├── ImageUpload.jsx    ← Cloudinary drag & drop
-        │       └── ProtectedRoute.jsx ← Route guards
-        └── pages/
-            ├── Home.jsx
-            ├── Products.jsx
-            ├── ProductDetail.jsx
-            ├── Cart.jsx
-            ├── Checkout.jsx
-            ├── Login.jsx
-            ├── Register.jsx
-            ├── Profile.jsx
-            ├── MyOrders.jsx
-            └── admin/
-                ├── AdminLayout.jsx    ← Sidebar layout
-                ├── AdminDashboard.jsx ← Analytics overview
-                ├── AdminProducts.jsx  ← Add/Edit/Delete + upload
-                ├── AdminCategories.jsx
-                ├── AdminOrders.jsx    ← Status update modal
-                └── AdminUsers.jsx     ← Promote/deactivate/delete
+```bash
+npm run dev
 ```
 
----
+This starts both servers simultaneously:
+- **Backend:** http://localhost:5000
+- **Frontend:** http://localhost:5173
 
-## 🔐 API Reference
-
-### Auth
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | `/api/auth/register` | Public |
-| POST | `/api/auth/login` | Public |
-| GET  | `/api/auth/me` | User |
-| PUT  | `/api/auth/profile` | User |
-| PUT  | `/api/auth/change-password` | User |
-
-### Products
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET  | `/api/products` | Public |
-| GET  | `/api/products/:id` | Public |
-| POST | `/api/products` | Admin |
-| PUT  | `/api/products/:id` | Admin |
-| DELETE | `/api/products/:id` | Admin |
-| POST | `/api/products/:id/reviews` | User |
-
-### Orders
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | `/api/orders` | User |
-| GET  | `/api/orders/my` | User |
-| GET  | `/api/orders/:id` | User/Admin |
-| GET  | `/api/orders` | Admin |
-| PUT  | `/api/orders/:id/status` | Admin |
-
-### Upload (Cloudinary)
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | `/api/upload` | Admin |
-| POST | `/api/upload/multiple` | Admin |
-| DELETE | `/api/upload/:publicId` | Admin |
-
-### Admin
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/admin/dashboard` | Admin |
-| GET | `/api/admin/users` | Admin |
-| PUT | `/api/admin/users/:id` | Admin |
-| DELETE | `/api/admin/users/:id` | Admin |
+Open your browser at **http://localhost:5173**
 
 ---
 
-## ⚙️ External Services Setup
+## 🔐 STEP 9 — Login as Admin
 
-### MongoDB Atlas (Free)
-1. Go to [mongodb.com/atlas](https://mongodb.com/atlas)
-2. Create free cluster → Connect → Get connection string
-3. Replace `MONGO_URI` in `server/.env`
-
-### Cloudinary (Free)
-1. Go to [cloudinary.com](https://cloudinary.com) → Sign up
-2. Dashboard → Copy Cloud Name, API Key, API Secret
-3. Replace the 3 `CLOUDINARY_*` vars in `server/.env`
+1. Go to http://localhost:5173/login
+2. Click **"Continue with Google"**
+3. Sign in with `jeevan808078018@gmail.com`
+4. You will automatically land on the **Admin Panel** at `/admin`
 
 ---
 
-## 🎯 Features
+## ⚙️ What You Can Do in Admin Panel
 
-- ✅ JWT Role-based Auth (user / admin)
-- ✅ Admin Dashboard with analytics
-- ✅ Product CRUD with Cloudinary image upload
-- ✅ Order system: Pending → Processing → Shipped → Delivered
-- ✅ Order status history timeline
-- ✅ Server-side price validation (tamper-proof)
-- ✅ Stock management (auto-decrement on order, restore on cancel)
-- ✅ 13% VAT + free shipping logic
-- ✅ Full-text product search
-- ✅ Dark mode
-- ✅ Cart (Zustand + persisted)
-- ✅ Wishlist sync
-- ✅ Product reviews (one per user)
-- ✅ Rate limiting + Helmet security
-- ✅ Responsive mobile UI
+| Feature | Location |
+|---------|----------|
+| View analytics & revenue | Dashboard |
+| Add new product with images | Products → Add Product |
+| Edit any product | Products → Edit |
+| Delete product | Products → Delete |
+| Add/edit categories | Categories |
+| View all orders | Orders |
+| Update order status | Orders → View → Update Status |
+| Promote user to admin | Users → Promote |
+| Deactivate user | Users → Deactivate |
+| Delete user | Users → Delete |
+
+---
+
+## 🌐 STEP 10 — Deploy Online (Render + Vercel)
+
+### Deploy Backend on Render (Free)
+
+1. Push your code to GitHub:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   ```
+   Then create a new repo at https://github.com and push.
+
+2. Go to https://render.com → Sign up with GitHub
+3. Click **"New +"** → **"Web Service"**
+4. Connect your GitHub repo
+5. Settings:
+   - Name: `sabaisale-api`
+   - Root Directory: `server`
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+6. Click **"Advanced"** → Add Environment Variables (paste all from server/.env)
+7. Click **"Create Web Service"**
+8. Wait ~3 minutes → Copy your Render URL e.g. `https://sabaisale-api.onrender.com`
+
+### Deploy Frontend on Vercel (Free)
+
+1. Go to https://vercel.com → Sign up with GitHub
+2. Click **"New Project"** → Import your repo
+3. Settings:
+   - Framework: Vite
+   - Root Directory: `client`
+4. Add Environment Variable:
+   - `VITE_API_URL` = `https://sabaisale-api.onrender.com/api`
+5. Click **Deploy**
+6. Wait ~2 minutes → your site is live!
+
+### Update Google OAuth for Production
+
+Go back to Google Cloud Console → Credentials → your OAuth client:
+- Add your Vercel URL to **Authorized JavaScript origins**
+- Add `https://sabaisale-api.onrender.com/api/auth/google/callback` to **Authorized redirect URIs**
+
+Also update in Render environment variables:
+- `CLIENT_URL` = your Vercel URL
+- `GOOGLE_CALLBACK_URL` = `https://sabaisale-api.onrender.com/api/auth/google/callback`
+
+---
+
+## 🐛 Bugs Fixed in This Version
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 1 | `seeder.js` dotenv path was wrong (CWD-relative) | Used `path.resolve(__dirname)` |
+| 2 | Order stock restoration checked `order.status` AFTER it was mutated | Saved `previousStatus` before mutation |
+| 3 | Zustand `total()` / `itemCount()` were functions inside store, not reactive selectors | Extracted as `selectCartTotal`, `selectCartItemCount` |
+| 4 | Garbage directories from bad `mkdir` command | Removed |
+| 5 | Cart could show stale totals | Now uses proper Zustand selectors |
+

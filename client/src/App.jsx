@@ -1,14 +1,10 @@
-// ============================================================
-// client/src/App.jsx — Root Router with protected & admin routes
-// ============================================================
+// client/src/App.jsx  —  Root Router
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect }        from 'react';
-import { useThemeStore }    from './utils/store';
-
-// Layout & Guards
+import { useEffect, lazy, Suspense } from 'react';
+import { useThemeStore } from './utils/store';
 import { ProtectedRoute, AdminRoute } from './components/common/ProtectedRoute';
 
-// Admin Pages
+// ── Admin Pages (eagerly loaded) ─────────────────────────────
 import AdminLayout      from './pages/admin/AdminLayout';
 import AdminDashboard   from './pages/admin/AdminDashboard';
 import AdminProducts    from './pages/admin/AdminProducts';
@@ -16,11 +12,7 @@ import AdminOrders      from './pages/admin/AdminOrders';
 import AdminUsers       from './pages/admin/AdminUsers';
 import AdminCategories  from './pages/admin/AdminCategories';
 
-// User Pages (import these from existing files in your repo)
-import MyOrders  from './pages/MyOrders';
-
-// Lazy-load heavy pages that already exist in the repo
-import { lazy, Suspense } from 'react';
+// ── Public & User Pages (lazy loaded for performance) ────────
 const Home          = lazy(() => import('./pages/Home'));
 const Products      = lazy(() => import('./pages/Products'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
@@ -29,9 +21,11 @@ const Checkout      = lazy(() => import('./pages/Checkout'));
 const Login         = lazy(() => import('./pages/Login'));
 const Register      = lazy(() => import('./pages/Register'));
 const Profile       = lazy(() => import('./pages/Profile'));
+const MyOrders      = lazy(() => import('./pages/MyOrders'));
+const AuthCallback  = lazy(() => import('./pages/AuthCallback'));
 
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
+const Loader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
     <div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full" />
   </div>
 );
@@ -39,42 +33,43 @@ const PageLoader = () => (
 const App = () => {
   const { dark } = useThemeStore();
 
-  // Apply dark class to root <html> for Tailwind dark mode
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<Loader />}>
         <Routes>
-          {/* ── Public Routes ──────────────────────────────── */}
-          <Route path="/"             element={<Home />} />
-          <Route path="/products"     element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/login"        element={<Login />} />
-          <Route path="/register"     element={<Register />} />
-          <Route path="/cart"         element={<Cart />} />
+          {/* ── Public ─────────────────────────────────────── */}
+          <Route path="/"              element={<Home />} />
+          <Route path="/products"      element={<Products />} />
+          <Route path="/products/:id"  element={<ProductDetail />} />
+          <Route path="/login"         element={<Login />} />
+          <Route path="/register"      element={<Register />} />
+          <Route path="/cart"          element={<Cart />} />
+          {/* Google OAuth callback — MUST be public */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
-          {/* ── Protected User Routes ──────────────────────── */}
+          {/* ── Protected User ─────────────────────────────── */}
           <Route element={<ProtectedRoute />}>
             <Route path="/checkout"  element={<Checkout />} />
             <Route path="/profile"   element={<Profile />} />
             <Route path="/my-orders" element={<MyOrders />} />
           </Route>
 
-          {/* ── Admin Routes (JWT + role=admin required) ────── */}
+          {/* ── Admin (JWT + role=admin) ────────────────────── */}
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index              element={<AdminDashboard />} />
-              <Route path="products"    element={<AdminProducts />} />
-              <Route path="categories"  element={<AdminCategories />} />
-              <Route path="orders"      element={<AdminOrders />} />
-              <Route path="users"       element={<AdminUsers />} />
+              <Route index             element={<AdminDashboard />} />
+              <Route path="products"   element={<AdminProducts />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="orders"     element={<AdminOrders />} />
+              <Route path="users"      element={<AdminUsers />} />
             </Route>
           </Route>
 
-          {/* ── 404 Fallback ───────────────────────────────── */}
+          {/* ── 404 ────────────────────────────────────────── */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

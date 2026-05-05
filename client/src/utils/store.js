@@ -1,5 +1,5 @@
 // ============================================================
-// client/src/utils/store.js — Zustand Global State
+// client/src/utils/store.js  —  Zustand Global State (Fixed)
 // ============================================================
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -20,36 +20,36 @@ export const useAuthStore = create(
 
       logout: () => {
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
         set({ user: null, token: null });
       },
 
       updateUser: (updates) =>
-        set((state) => ({ user: { ...state.user, ...updates } })),
+        set((state) => ({ user: state.user ? { ...state.user, ...updates } : null })),
 
       isAdmin: () => get().user?.role === 'admin',
     }),
-    { name: 'auth-store', partialize: (s) => ({ user: s.user, token: s.token }) }
+    {
+      name: 'auth-store',
+      partialize: (s) => ({ user: s.user, token: s.token }),
+    }
   )
 );
 
 // ══════════════════════════════════════════════════════════════
-// CART STORE
+// CART STORE  —  FIX: itemCount and total are plain selectors
 // ══════════════════════════════════════════════════════════════
 export const useCartStore = create(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [], // [{ _id, name, price, quantity, image }]
 
-      addItem: (product, qty = 1) => {
+      addItem: (product, qty = 1) =>
         set((state) => {
-          const existing = state.items.find((i) => i._id === product._id);
-          if (existing) {
+          const exists = state.items.find((i) => i._id === product._id);
+          if (exists) {
             return {
               items: state.items.map((i) =>
-                i._id === product._id
-                  ? { ...i, quantity: i.quantity + qty }
-                  : i
+                i._id === product._id ? { ...i, quantity: i.quantity + qty } : i
               ),
             };
           }
@@ -65,8 +65,7 @@ export const useCartStore = create(
               },
             ],
           };
-        });
-      },
+        }),
 
       removeItem: (id) =>
         set((state) => ({ items: state.items.filter((i) => i._id !== id) })),
@@ -80,14 +79,14 @@ export const useCartStore = create(
         })),
 
       clearCart: () => set({ items: [] }),
-
-      // Computed totals
-      total:      () => get().items.reduce((s, i) => s + i.price * i.quantity, 0),
-      itemCount:  () => get().items.reduce((s, i) => s + i.quantity, 0),
     }),
     { name: 'cart-store' }
   )
 );
+
+// Selectors used in components — computed outside the store (reactive, correct)
+export const selectCartTotal     = (state) => state.items.reduce((s, i) => s + i.price * i.quantity, 0);
+export const selectCartItemCount = (state) => state.items.reduce((s, i) => s + i.quantity, 0);
 
 // ══════════════════════════════════════════════════════════════
 // WISHLIST STORE
@@ -95,7 +94,7 @@ export const useCartStore = create(
 export const useWishlistStore = create(
   persist(
     (set, get) => ({
-      ids: [], // product IDs
+      ids: [],
 
       toggle: (id) =>
         set((state) => ({
@@ -117,7 +116,7 @@ export const useWishlistStore = create(
 export const useThemeStore = create(
   persist(
     (set) => ({
-      dark: false,
+      dark:   false,
       toggle: () => set((s) => ({ dark: !s.dark })),
     }),
     { name: 'theme-store' }
