@@ -1,35 +1,98 @@
+// ============================================================
+// server/models/Product.js — Product Model with Cloudinary Images
+// ============================================================
 const mongoose = require('mongoose');
 
-const productSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  slug: { type: String, unique: true, lowercase: true },
-  description: { type: String, required: true },
-  price: { type: Number, required: true, min: 0 },
-  originalPrice: { type: Number },
-  discount: { type: Number, default: 0 },
-  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-  images: [{ type: String }],
-  image: { type: String },
-  stock: { type: Number, default: 0, min: 0 },
-  brand: { type: String },
-  tags: [String],
-  specifications: [{ key: String, value: String }],
-  rating: { type: Number, default: 0, min: 0, max: 5 },
-  numReviews: { type: Number, default: 0 },
-  featured: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: true },
-  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-}, { timestamps: true });
+const reviewSchema = new mongoose.Schema(
+  {
+    user:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    name:    { type: String, required: true },
+    rating:  { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, required: true, maxlength: 500 },
+  },
+  { timestamps: true }
+);
 
-// Auto-generate slug
-productSchema.pre('save', function (next) {
-  if (this.isModified('name')) {
-    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Product name is required'],
+      trim: true,
+      maxlength: [200, 'Product name cannot exceed 200 characters'],
+    },
+    description: {
+      type: String,
+      required: [true, 'Description is required'],
+      maxlength: [2000, 'Description cannot exceed 2000 characters'],
+    },
+    price: {
+      type: Number,
+      required: [true, 'Price is required'],
+      min: [0, 'Price cannot be negative'],
+    },
+    originalPrice: {
+      type: Number,
+      default: 0,
+    },
+    // ─── Cloudinary Image Fields ──────────────────────────────
+    images: [
+      {
+        url:       { type: String, required: true },   // Cloudinary secure URL
+        publicId:  { type: String, required: true },   // Cloudinary public_id for deletion
+        alt:       { type: String, default: '' },
+      },
+    ],
+    // ─── Category Reference ───────────────────────────────────
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      required: [true, 'Category is required'],
+    },
+    // ─── Inventory & Status ───────────────────────────────────
+    stock: {
+      type: Number,
+      required: [true, 'Stock is required'],
+      min: [0, 'Stock cannot be negative'],
+      default: 0,
+    },
+    isActive:  { type: Boolean, default: true },
+    isFeatured: { type: Boolean, default: false },
+    tags:      [{ type: String, lowercase: true }],
+    brand:     { type: String, default: '' },
+    sku:       { type: String, unique: true, sparse: true },
+
+    // ─── Computed Review Stats ────────────────────────────────
+    reviews: [reviewSchema],
+    numReviews: { type: Number, default: 0 },
+    rating:     { type: Number, default: 0, min: 0, max: 5 },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
-  if (this.originalPrice && this.price) {
-    this.discount = Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
+);
+
+// ─── Full-text search index ───────────────────────────────────
+productSchema.index({ name: 'text', description: 'text', tags: 'text', brand: 'text' });
+
+// ─── Method: recalculate average rating after review changes ─
+productSchema.methods.updateRating = function () {
+  if (this.reviews.length === 0) {
+    this.numReviews = 0;
+    this.rating = 0;
+  } else {
+    this.numReviews = this.reviews.length;
+    this.rating =
+      this.reviews.reduce((sum, r) => sum + r.rating, 0) / this.reviews.length;
   }
-  next();
+};
+
+// ─── Virtual: discount percentage ─────────────────────────────
+productSchema.virtual('discountPercent').get(function () {
+  if (!this.originalPrice || this.originalPrice <= this.price) return 0;
+  return Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
 });
 
 module.exports = mongoose.model('Product', productSchema);

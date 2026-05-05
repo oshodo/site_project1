@@ -1,13 +1,15 @@
 {
   "name": "sabaisale",
-  "version": "1.0.0",
-  "description": "Premium E-Commerce Platform",
+  "version": "2.0.0",
+  "description": "SabaiSale — Production eCommerce Platform",
+  "private": true,
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
-    "build": "cd client && npm run build"
+    "build": "cd client && npm run build",
+    "seed": "cd server && npm run seed"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

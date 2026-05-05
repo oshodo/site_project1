@@ -1,49 +1,67 @@
+// ============================================================
+// server/middleware/auth.js — JWT Auth & Admin Guard
+// ============================================================
 const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
-const protect = async (req, res, next) => {
+// ─── protect ─────────────────────────────────────────────────
+// Validates JWT and attaches req.user. Used on all protected routes.
+const protect = asyncHandler(async (req, res, next) => {
+  let token;
+
+  // Accept token from Authorization header: "Bearer <token>"
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    res.status(401);
+    throw new Error('Not authorized — no token provided');
+  }
+
   try {
-    const auth = req.headers.authorization;
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, message: 'Not authorized — please login' });
-    }
-    const token = auth.split(' ')[1];
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (e) {
-      return res.status(401).json({ success: false, message: 'Token expired — please login again' });
-    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Attach full user object (minus password) to request
     req.user = await User.findById(decoded.id).select('-password');
-    if (!req.user) return res.status(401).json({ success: false, message: 'User not found' });
-    if (!req.user.isActive) return res.status(401).json({ success: false, message: 'Account is deactivated' });
+
+    if (!req.user) {
+      res.status(401);
+      throw new Error('User not found');
+    }
+
+    if (!req.user.isActive) {
+      res.status(403);
+      throw new Error('Your account has been deactivated. Contact support.');
+    }
+
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: 'Authentication failed' });
-  }
-};
-
-const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') return next();
-  res.status(403).json({ success: false, message: 'Admin access required' });
-};
-
-const optionalAuth = async (req, res, next) => {
-  try {
-    const auth = req.headers.authorization;
-    if (auth && auth.startsWith('Bearer ')) {
-      const token = auth.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
+    if (err.name === 'JsonWebTokenError') {
+      res.status(401);
+      throw new Error('Invalid token');
     }
-  } catch (_) {}
-  next();
+    if (err.name === 'TokenExpiredError') {
+      res.status(401);
+      throw new Error('Token has expired, please login again');
+    }
+    throw err;
+  }
+});
+
+// ─── adminOnly ───────────────────────────────────────────────
+// Must be used AFTER protect. Checks that the user has admin role.
+const adminOnly = (req, res, next) => {
+  if (req.user?.role === 'admin') return next();
+  res.status(403);
+  throw new Error('Access denied — admin only');
 };
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '30d',
+// ─── generateToken ───────────────────────────────────────────
+// Creates a signed JWT for a given user id.
+const generateToken = (id) =>
+  jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
-};
 
-module.exports = { protect, adminOnly, optionalAuth, generateToken };
+module.exports = { protect, adminOnly, generateToken };

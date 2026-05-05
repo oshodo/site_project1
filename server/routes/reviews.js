@@ -1,44 +1,35 @@
-const router = require('express').Router();
+// server/routes/reviews.js
+const express      = require('express');
+const router       = express.Router();
 const asyncHandler = require('express-async-handler');
-const { Review } = require('../models/index');
-const { protect, adminOnly } = require('../middleware/auth');
+const Product      = require('../models/Product');
+const { protect }  = require('../middleware/auth');
 
-// Get product reviews
+// GET /api/reviews/product/:productId
 router.get('/product/:productId', asyncHandler(async (req, res) => {
-  const reviews = await Review.find({ product: req.params.productId })
-    .populate('user', 'name avatar').sort({ createdAt: -1 });
-  res.json({ success: true, reviews });
+  const product = await Product.findById(req.params.productId)
+    .populate('reviews.user', 'name avatar');
+  if (!product) { res.status(404); throw new Error('Product not found'); }
+  res.json({ success: true, data: product.reviews });
 }));
 
-// Add review
-router.post('/', protect, asyncHandler(async (req, res) => {
-  const { productId, rating, title, comment } = req.body;
-  const existing = await Review.findOne({ user: req.user.id, product: productId });
-  if (existing) return res.status(400).json({ success: false, message: 'You already reviewed this product' });
-  const review = await Review.create({ user: req.user.id, product: productId, rating, title, comment });
-  await review.populate('user', 'name avatar');
-  res.status(201).json({ success: true, review });
-}));
+// DELETE /api/reviews/:productId/:reviewId
+router.delete('/:productId/:reviewId', protect, asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.productId);
+  if (!product) { res.status(404); throw new Error('Product not found'); }
 
-// Update review
-router.put('/:id', protect, asyncHandler(async (req, res) => {
-  const review = await Review.findById(req.params.id);
-  if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
-  if (review.user.toString() !== req.user.id) return res.status(403).json({ success: false, message: 'Not authorized' });
-  Object.assign(review, req.body);
-  await review.save();
-  res.json({ success: true, review });
-}));
+  const review = product.reviews.id(req.params.reviewId);
+  if (!review) { res.status(404); throw new Error('Review not found'); }
 
-// Delete review
-router.delete('/:id', protect, asyncHandler(async (req, res) => {
-  const review = await Review.findById(req.params.id);
-  if (!review) return res.status(404).json({ success: false, message: 'Review not found' });
-  if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
-    return res.status(403).json({ success: false, message: 'Not authorized' });
+  if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    res.status(403); throw new Error('Not authorized');
   }
-  await review.deleteOne();
-  res.json({ success: true, message: 'Review removed' });
+
+  review.deleteOne();
+  product.updateRating();
+  await product.save();
+
+  res.json({ success: true, message: 'Review deleted' });
 }));
 
 module.exports = router;

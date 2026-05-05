@@ -1,103 +1,106 @@
+// client/src/pages/Cart.jsx
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, CheckCircle } from 'lucide-react';
-import { useCartStore } from '../utils/store';
-import { EmptyState } from '../components/common/index';
+import { useCartStore, useAuthStore } from '../utils/store';
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
+import toast from 'react-hot-toast';
 
-export default function Cart() {
-  const { items, removeItem, updateQuantity, getTotal } = useCartStore();
-  const navigate = useNavigate();
-  const total = getTotal();
-  const shipping = total > 5000 ? 0 : 200;
-  const tax = Math.round(total * 0.13);
+const Cart = () => {
+  const { items, removeItem, updateQty, clearCart, total } = useCartStore();
+  const { user }    = useAuthStore();
+  const navigate    = useNavigate();
+  const subtotal    = total();
+  const shipping    = subtotal >= 2000 ? 0 : 100;
+  const tax         = Math.round(subtotal * 0.13);
+  const grandTotal  = subtotal + shipping + tax;
 
-  if (items.length === 0) return (
-    <div className="pt-24 pb-16">
-      <div className="container-custom">
-        <EmptyState icon="🛒" title="Your cart is empty"
-          message="Looks like you haven't added anything yet."
-          action={<Link to="/products" className="btn-primary">Start Shopping</Link>}
-        />
-      </div>
-    </div>
-  );
+  const handleCheckout = () => {
+    if (!user) { toast.error('Please login to checkout'); navigate('/login'); return; }
+    navigate('/checkout');
+  };
 
   return (
-    <div className="pt-24 pb-16">
-      <div className="container-custom">
-        <h1 className="font-display text-3xl font-bold text-[var(--text)] mb-8">
-          Shopping Cart <span className="text-[var(--text-muted)] text-xl font-normal">({items.length} items)</span>
-        </h1>
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Items */}
-          <div className="lg:col-span-2 space-y-4">
-            <AnimatePresence>
-              {items.map(item => (
-                <motion.div key={item.product._id}
-                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20, height: 0 }}
-                  className="card p-5 flex gap-4"
-                >
-                  <img src={item.product.image || item.product.images?.[0]} alt={item.product.name}
-                    className="w-24 h-24 object-contain bg-gray-50 dark:bg-gray-900 rounded-xl flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <Link to={`/products/${item.product._id}`} className="font-semibold text-[var(--text)] hover:text-primary-500 line-clamp-2 text-sm">{item.product.name}</Link>
-                    <p className="text-primary-500 font-bold mt-1">NPR {item.product.price?.toLocaleString()}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center border border-[var(--border)] rounded-xl overflow-hidden">
-                        <button onClick={() => updateQuantity(item.product._id, item.quantity - 1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={14} /></button>
-                        <span className="px-4 text-sm font-semibold">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
-                          disabled={item.quantity >= item.product.stock}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-30"
-                        ><Plus size={14} /></button>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-[var(--text)]">NPR {(item.product.price * item.quantity).toLocaleString()}</span>
-                        <button onClick={() => removeItem(item.product._id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <Navbar />
 
-          {/* Summary */}
-          <div>
-            <div className="card p-6 sticky top-24">
-              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-5">Order Summary</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-[var(--text-muted)]"><span>Subtotal</span><span>NPR {total.toLocaleString()}</span></div>
-                <div className="flex justify-between text-[var(--text-muted)]">
-                  <span>Shipping</span>
-                  <span>{shipping === 0 ? <span className="text-emerald-500 font-semibold">FREE</span> : `NPR ${shipping}`}</span>
-                </div>
-                <div className="flex justify-between text-[var(--text-muted)]"><span>Tax (13%)</span><span>NPR {tax.toLocaleString()}</span></div>
-                {shipping > 0 && (
-                  <p className="text-xs text-primary-500 bg-primary-50 dark:bg-primary-950 rounded-lg px-3 py-2">
-                    Add NPR {(5000 - total).toLocaleString()} more for free shipping!
+      <div className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold dark:text-white mb-8">🛒 Shopping Cart</h1>
+
+        {items.length === 0 ? (
+          <div className="text-center py-24 card">
+            <p className="text-6xl mb-4">🛒</p>
+            <p className="text-gray-500 dark:text-gray-400 text-xl mb-6">Your cart is empty</p>
+            <Link to="/products" className="btn-primary">Continue Shopping</Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Items */}
+            <div className="lg:col-span-2 space-y-4">
+              {items.map((item) => (
+                <div key={item._id} className="card p-4 flex items-center gap-4">
+                  <img src={item.image || 'https://placehold.co/80x80'} alt={item.name}
+                    className="w-20 h-20 object-cover rounded-xl shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/products/${item._id}`}
+                      className="font-semibold dark:text-white hover:text-orange-500 line-clamp-2">{item.name}</Link>
+                    <p className="text-orange-500 font-bold mt-1">NPR {item.price.toLocaleString()}</p>
+                  </div>
+                  {/* Qty control */}
+                  <div className="flex items-center border dark:border-gray-600 rounded-xl overflow-hidden shrink-0">
+                    <button onClick={() => updateQty(item._id, item.quantity - 1)}
+                      className="w-9 h-9 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white font-bold text-lg">−</button>
+                    <span className="w-10 text-center text-sm font-semibold dark:text-white">{item.quantity}</span>
+                    <button onClick={() => updateQty(item._id, item.quantity + 1)}
+                      className="w-9 h-9 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white font-bold text-lg">+</button>
+                  </div>
+                  <p className="w-24 text-right font-bold dark:text-white shrink-0">
+                    NPR {(item.price * item.quantity).toLocaleString()}
                   </p>
-                )}
+                  <button onClick={() => removeItem(item._id)} className="text-red-400 hover:text-red-600 text-xl shrink-0">×</button>
+                </div>
+              ))}
+
+              <button onClick={clearCart} className="text-sm text-red-500 hover:underline">Clear cart</button>
+            </div>
+
+            {/* Summary */}
+            <div className="card p-6 h-fit sticky top-24 space-y-4">
+              <h2 className="font-bold text-lg dark:text-white">Order Summary</h2>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between dark:text-gray-300">
+                  <span>Subtotal ({items.reduce((s,i) => s + i.quantity, 0)} items)</span>
+                  <span>NPR {subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between dark:text-gray-300">
+                  <span>Shipping</span>
+                  <span className={shipping === 0 ? 'text-green-500 font-medium' : ''}>
+                    {shipping === 0 ? 'FREE' : `NPR ${shipping}`}
+                  </span>
+                </div>
+                {shipping > 0 && <p className="text-xs text-gray-400">Free shipping on orders over NPR 2,000</p>}
+                <div className="flex justify-between dark:text-gray-300">
+                  <span>Tax (13% VAT)</span>
+                  <span>NPR {tax.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between font-bold text-base dark:text-white pt-3 border-t dark:border-gray-700">
+                  <span>Total</span>
+                  <span className="text-orange-500">NPR {grandTotal.toLocaleString()}</span>
+                </div>
               </div>
-              <div className="border-t border-[var(--border)] mt-4 pt-4 flex justify-between font-bold text-[var(--text)] text-lg">
-                <span>Total</span><span>NPR {(total + shipping + tax).toLocaleString()}</span>
-              </div>
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                onClick={() => navigate('/checkout')}
-                className="btn-primary w-full mt-5 flex items-center justify-center gap-2 py-4"
-              >
-                Proceed to Checkout <ArrowRight size={18} />
-              </motion.button>
-              <Link to="/products" className="block text-center text-sm text-[var(--text-muted)] hover:text-primary-500 mt-3 transition-colors">
-                Continue Shopping
+              <button onClick={handleCheckout} className="btn-primary w-full py-3 text-base">
+                Proceed to Checkout →
+              </button>
+              <Link to="/products" className="block text-center text-sm text-orange-500 hover:underline">
+                ← Continue Shopping
               </Link>
             </div>
           </div>
-        </div>
+        )}
       </div>
+
+      <Footer />
     </div>
   );
-}
+};
+
+export default Cart;

@@ -1,308 +1,197 @@
-# 🛍️ SabaiSale — Premium E-Commerce Platform
+# 🛍️ SabaiSale — Production eCommerce Platform
 
-> Nepal's premium full-stack e-commerce platform built with React, Node.js, Express & MongoDB.
-
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js)](https://nodejs.org)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://mongodb.com)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38BDF8?logo=tailwindcss)](https://tailwindcss.com)
+A full-stack MERN eCommerce platform built for Nepal with admin dashboard, Cloudinary image uploads, order tracking, JWT authentication, and more.
 
 ---
 
-## ✨ Features
+## 🚀 Quick Start (3 Steps)
 
-| Feature | Details |
-|---------|---------|
-| 🎨 Premium UI | Apple/Nike-inspired design, dark mode, smooth Framer Motion animations |
-| 🔐 Auth | JWT, bcrypt, role-based (user / admin) |
-| 🛒 Cart & Checkout | Zustand state, multi-step checkout, NPR pricing |
-| ❤️ Wishlist | Toggle wishlist, persistent across sessions |
-| ⭐ Reviews | Star ratings, per-product, one per user |
-| 📱 Responsive | Mobile-first, fully responsive on all screen sizes |
-| 🔍 Search & Filter | Full-text search, category, price range, sort |
-| 📊 Admin Panel | Dashboard with analytics, full CRUD for products/orders/users |
-| 📦 50+ Products | 4 categories, realistic seeded data |
-| 🖼️ Image Upload | Cloudinary integration |
-| 🚀 Deployment Ready | Vercel (frontend) + Render (backend) |
-
----
-
-## 🗂️ Folder Structure
-
-```
-sabaisale/
-├── client/                        # React + Vite frontend
-│   ├── public/
-│   │   └── favicon.svg
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── common/            # Navbar, Footer, ProductCard, etc.
-│   │   ├── pages/
-│   │   │   ├── admin/             # Dashboard, Products, Orders, Users, etc.
-│   │   │   ├── Home.jsx
-│   │   │   ├── Products.jsx
-│   │   │   ├── ProductDetail.jsx
-│   │   │   ├── Cart.jsx
-│   │   │   ├── Checkout.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── About.jsx
-│   │   │   └── ...
-│   │   ├── utils/
-│   │   │   ├── api.js             # All axios API calls
-│   │   │   └── store.js           # Zustand stores (auth, cart, wishlist, theme)
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── tailwind.config.js
-│   ├── vite.config.js
-│   └── vercel.json
-│
-└── server/                        # Express backend
-    ├── models/
-    │   ├── User.js
-    │   ├── Product.js
-    │   └── index.js               # Category, Order, Review, Founder
-    ├── routes/
-    │   ├── auth.js
-    │   ├── products.js
-    │   ├── categories.js
-    │   ├── orders.js
-    │   ├── cart.js
-    │   ├── reviews.js
-    │   ├── wishlist.js
-    │   ├── founders.js
-    │   ├── admin.js
-    │   └── upload.js
-    ├── middleware/
-    │   └── auth.js
-    ├── utils/
-    │   └── seeder.js
-    ├── index.js
-    ├── render.yaml
-    └── package.json
-```
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+
-- MongoDB Atlas account (free tier)
-- Git
-
-### Step 1 — Clone & Install
-
+### Step 1 — Install dependencies
 ```bash
-git clone <your-repo-url>
-cd sabaisale
-
-# Install all dependencies at once
 npm run install:all
 ```
 
-### Step 2 — Configure Environment
+### Step 2 — Configure environment variables
 
-```bash
-cd server
-cp ../.env.example .env
+**Server** → Edit `server/.env` (already created):
 ```
-
-Edit `server/.env`:
-
-```env
-PORT=5000
-NODE_ENV=development
-
-# MongoDB Atlas — get from mongodb.com/atlas
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/sabaisale
-
-# JWT Secret — use any long random string
-JWT_SECRET=your_super_secret_key_minimum_32_chars_long
-
-# Frontend URL (for CORS)
-CLIENT_URL=http://localhost:5173
-
-# Cloudinary — get from cloudinary.com (free tier)
+MONGO_URI=mongodb+srv://USERNAME:PASSWORD@cluster.mongodb.net/sabaisale
+JWT_SECRET=your_random_secret_here
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-
-# Admin Credentials
-ADMIN_EMAIL=admin@sabaisale.com
-ADMIN_PASSWORD=Jeevan@Sabaisale
 ```
 
-### Step 3 — Seed the Database
+**Client** → Edit `client/.env`:
+```
+VITE_API_URL=http://localhost:5000/api
+```
 
+### Step 3 — Seed the database + run
 ```bash
-cd server
-npm run seed
+npm run seed     # Creates admin user, categories, and 8 sample products
+npm run dev      # Starts both backend (5000) and frontend (5173)
 ```
 
-Output:
-```
-✅ Connected to MongoDB
-🗑️  Cleared existing data
-✅ Created 4 categories
-✅ Admin created: admin@sabaisale.com
-✅ Created 51 products
-✅ Created 2 founders
-🎉 Database seeded successfully!
-```
-
-### Step 4 — Run the App
-
-```bash
-# From root directory — runs both frontend and backend
-npm run dev
-```
-
-Or separately:
-```bash
-# Terminal 1 — Backend
-cd server && npm run dev
-
-# Terminal 2 — Frontend
-cd client && npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173)
+**Admin Login:**
+- URL: http://localhost:5173/admin
+- Email: `admin@sabaisale.com`
+- Password: `Admin@Sabaisale123`
 
 ---
 
-## 🔑 Demo Credentials
+## 📁 Project Structure
 
-| Role  | Email | Password |
-|-------|-------|----------|
-| **Admin** | admin@sabaisale.com | Jeevan@Sabaisale |
-| **User** | (register any account) | — |
-
-**Admin Login:** Username is `Jeevandon`, admin email is `admin@sabaisale.com`
+```
+sabaisale/
+├── package.json               ← Root scripts (concurrently)
+│
+├── server/
+│   ├── .env                   ← ⚠️ Fill with your credentials
+│   ├── index.js               ← Express app entry point
+│   ├── config/
+│   │   └── cloudinary.js      ← Cloudinary + Multer config
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── productController.js
+│   │   ├── orderController.js
+│   │   ├── adminController.js
+│   │   └── uploadController.js
+│   ├── middleware/
+│   │   └── auth.js            ← protect() + adminOnly() JWT middleware
+│   ├── models/
+│   │   ├── User.js            ← role: user | admin
+│   │   ├── Product.js         ← images[], reviews[], stock
+│   │   ├── Order.js           ← status history, VAT, shipping
+│   │   └── Category.js
+│   ├── routes/
+│   │   ├── auth.js            ← /api/auth/*
+│   │   ├── products.js        ← /api/products/*
+│   │   ├── orders.js          ← /api/orders/*
+│   │   ├── admin.js           ← /api/admin/* (admin only)
+│   │   ├── upload.js          ← /api/upload (Cloudinary)
+│   │   ├── categories.js
+│   │   ├── reviews.js
+│   │   ├── wishlist.js
+│   │   └── cart.js
+│   └── utils/
+│       └── seeder.js          ← Run with: npm run seed
+│
+└── client/
+    ├── .env                   ← VITE_API_URL
+    ├── index.html
+    ├── vite.config.js
+    ├── tailwind.config.js
+    └── src/
+        ├── main.jsx
+        ├── App.jsx            ← All routes including admin
+        ├── index.css          ← Tailwind + custom classes
+        ├── utils/
+        │   ├── api.js         ← All Axios API calls
+        │   └── store.js       ← Zustand: auth, cart, wishlist, theme
+        ├── components/
+        │   └── common/
+        │       ├── Navbar.jsx
+        │       ├── Footer.jsx
+        │       ├── ProductCard.jsx
+        │       ├── ImageUpload.jsx    ← Cloudinary drag & drop
+        │       └── ProtectedRoute.jsx ← Route guards
+        └── pages/
+            ├── Home.jsx
+            ├── Products.jsx
+            ├── ProductDetail.jsx
+            ├── Cart.jsx
+            ├── Checkout.jsx
+            ├── Login.jsx
+            ├── Register.jsx
+            ├── Profile.jsx
+            ├── MyOrders.jsx
+            └── admin/
+                ├── AdminLayout.jsx    ← Sidebar layout
+                ├── AdminDashboard.jsx ← Analytics overview
+                ├── AdminProducts.jsx  ← Add/Edit/Delete + upload
+                ├── AdminCategories.jsx
+                ├── AdminOrders.jsx    ← Status update modal
+                └── AdminUsers.jsx     ← Promote/deactivate/delete
+```
 
 ---
 
-## 📡 API Reference
+## 🔐 API Reference
 
 ### Auth
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | /api/auth/register | Register | — |
-| POST | /api/auth/login | Login | — |
-| GET | /api/auth/me | Get profile | ✓ |
-| PUT | /api/auth/profile | Update profile | ✓ |
-| PUT | /api/auth/change-password | Change password | ✓ |
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/auth/register` | Public |
+| POST | `/api/auth/login` | Public |
+| GET  | `/api/auth/me` | User |
+| PUT  | `/api/auth/profile` | User |
+| PUT  | `/api/auth/change-password` | User |
 
 ### Products
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | /api/products | List (filter, search, sort, paginate) | — |
-| GET | /api/products/featured | Featured products | — |
-| GET | /api/products/:id | Product detail | — |
-| POST | /api/products | Create product | Admin |
-| PUT | /api/products/:id | Update product | Admin |
-| DELETE | /api/products/:id | Soft-delete | Admin |
-
-### Categories
-| GET/POST | /api/categories | List / Create | —/Admin |
-| PUT/DELETE | /api/categories/:id | Update / Delete | Admin |
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET  | `/api/products` | Public |
+| GET  | `/api/products/:id` | Public |
+| POST | `/api/products` | Admin |
+| PUT  | `/api/products/:id` | Admin |
+| DELETE | `/api/products/:id` | Admin |
+| POST | `/api/products/:id/reviews` | User |
 
 ### Orders
-| POST | /api/orders | Place order | ✓ |
-| GET | /api/orders/my | My orders | ✓ |
-| GET | /api/orders/:id | Order detail | ✓ |
-| PUT | /api/orders/:id/status | Update status | Admin |
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/orders` | User |
+| GET  | `/api/orders/my` | User |
+| GET  | `/api/orders/:id` | User/Admin |
+| GET  | `/api/orders` | Admin |
+| PUT  | `/api/orders/:id/status` | Admin |
 
-### Reviews
-| GET | /api/reviews/product/:id | Product reviews | — |
-| POST | /api/reviews | Add review | ✓ |
-| PUT/DELETE | /api/reviews/:id | Edit/Delete | ✓ |
+### Upload (Cloudinary)
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/upload` | Admin |
+| POST | `/api/upload/multiple` | Admin |
+| DELETE | `/api/upload/:publicId` | Admin |
 
 ### Admin
-| GET | /api/admin/dashboard | Analytics stats | Admin |
-| GET | /api/admin/users | All users | Admin |
-| PUT/DELETE | /api/admin/users/:id | Edit/Delete user | Admin |
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/admin/dashboard` | Admin |
+| GET | `/api/admin/users` | Admin |
+| PUT | `/api/admin/users/:id` | Admin |
+| DELETE | `/api/admin/users/:id` | Admin |
 
 ---
 
-## 🚀 Deployment
+## ⚙️ External Services Setup
 
-### Deploy Backend → Render
+### MongoDB Atlas (Free)
+1. Go to [mongodb.com/atlas](https://mongodb.com/atlas)
+2. Create free cluster → Connect → Get connection string
+3. Replace `MONGO_URI` in `server/.env`
 
-1. Push code to GitHub
-2. Go to [render.com](https://render.com) → **New Web Service**
-3. Connect your repo → select `server/` as root
-4. Settings:
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-   - **Node version:** 18
-5. Add all environment variables from `.env`
-6. Click **Deploy**
-7. Copy your Render URL: `https://sabaisale-api.onrender.com`
-
-### Deploy Frontend → Vercel
-
-1. Go to [vercel.com](https://vercel.com) → **New Project**
-2. Import your GitHub repo → set **Root Directory** to `client`
-3. Add environment variable:
-   ```
-   VITE_API_URL=https://sabaisale-api.onrender.com/api
-   ```
-4. Click **Deploy**
-5. Your site: `https://sabaisale.vercel.app`
-
-### Update CORS
-
-After deploying frontend, update backend `.env` on Render:
-```env
-CLIENT_URL=https://sabaisale.vercel.app
-```
+### Cloudinary (Free)
+1. Go to [cloudinary.com](https://cloudinary.com) → Sign up
+2. Dashboard → Copy Cloud Name, API Key, API Secret
+3. Replace the 3 `CLOUDINARY_*` vars in `server/.env`
 
 ---
 
-## 🎨 Tech Stack
+## 🎯 Features
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite, Tailwind CSS, Framer Motion |
-| State Management | Zustand |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas, Mongoose |
-| Authentication | JWT, bcryptjs |
-| Image Uploads | Cloudinary |
-| Validation | express-validator |
-| Deploy: Frontend | Vercel |
-| Deploy: Backend | Render |
-
----
-
-## 📸 Screenshots
-
-> After running the app, you'll see:
-> - **Homepage**: Hero slider, categories grid, featured products, testimonials
-> - **Products**: Grid with filters sidebar, search, sort, pagination
-> - **Product Detail**: Image gallery, reviews, related products
-> - **Admin Panel**: Dark sidebar, dashboard analytics, full CRUD tables
-> - **Dark Mode**: Full dark mode toggle everywhere
-
----
-
-## 🛠️ Customization
-
-### Change colors
-Edit `client/tailwind.config.js` → `colors.primary` to change the orange theme.
-
-### Add payment gateway
-1. Create account at [eSewa](https://developer.esewa.com.np/) or [Khalti](https://docs.khalti.com/)
-2. Add API keys to `.env`
-3. Create payment routes in `server/routes/payment.js`
-4. Add payment confirmation step in `client/src/pages/Checkout.jsx`
-
-### Add more categories
-Run the seeder again after editing `server/utils/seeder.js`.
-
----
-
-## 📄 License
-
-MIT — Built with ❤️ in Nepal by **Jeevan Don** & **Sabai Lama**
+- ✅ JWT Role-based Auth (user / admin)
+- ✅ Admin Dashboard with analytics
+- ✅ Product CRUD with Cloudinary image upload
+- ✅ Order system: Pending → Processing → Shipped → Delivered
+- ✅ Order status history timeline
+- ✅ Server-side price validation (tamper-proof)
+- ✅ Stock management (auto-decrement on order, restore on cancel)
+- ✅ 13% VAT + free shipping logic
+- ✅ Full-text product search
+- ✅ Dark mode
+- ✅ Cart (Zustand + persisted)
+- ✅ Wishlist sync
+- ✅ Product reviews (one per user)
+- ✅ Rate limiting + Helmet security
+- ✅ Responsive mobile UI

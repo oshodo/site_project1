@@ -1,248 +1,143 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Shield, Truck, RotateCcw, Headphones, Sparkles } from 'lucide-react';
-import { productsAPI } from '../utils/api';
-import { ProductCard, SkeletonCard, SectionHeader } from '../components/common/index';
+// client/src/pages/Home.jsx
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { productAPI, categoryAPI } from '../utils/api';
+import ProductCard from '../components/common/ProductCard';
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 
-const BANNERS = [
-  {
-    img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400',
-    eyebrow: 'New Collection',
-    title: 'Premium Products\nDelivered to Nepal',
-    sub: 'Authentic goods from top global brands, shipped directly to your door.',
-    cta: 'Explore Collection',
-    link: '/products',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1400',
-    eyebrow: 'Electronics',
-    title: 'Latest Tech\nBest Prices',
-    sub: 'From Apple to Samsung — genuine products with warranty.',
-    cta: 'Shop Electronics',
-    link: '/products?category=Electronics',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1400',
-    eyebrow: 'Fashion',
-    title: 'Style That\nSpeaks for You',
-    sub: 'Curated fashion from the world\'s leading brands.',
-    cta: 'Shop Fashion',
-    link: '/products?category=Fashion',
-  },
+const HERO_SLIDES = [
+  { title: 'New Season Arrivals',   sub: 'Discover the latest gadgets & fashion',     bg: 'from-orange-500 to-pink-500',    emoji: '🚀' },
+  { title: 'Free Shipping Over ₹2000', sub: 'Shop more, save more on delivery!',       bg: 'from-blue-500 to-purple-600',    emoji: '🚚' },
+  { title: 'Up to 50% OFF Today',   sub: 'Limited time deals on top products',         bg: 'from-green-500 to-teal-500',     emoji: '🎉' },
 ];
 
-const CATEGORIES = [
-  { name: 'Electronics', icon: '⌨️', sub: '150+ Products', link: '/products?category=Electronics' },
-  { name: 'Fashion', icon: '👔', sub: '200+ Styles', link: '/products?category=Fashion' },
-  { name: 'Home', icon: '🕯️', sub: '100+ Items', link: '/products?category=Home' },
-  { name: 'Accessories', icon: '⌚', sub: '80+ Picks', link: '/products?category=Accessories' },
-];
+const Home = () => {
+  const [featured,    setFeatured]    = useState([]);
+  const [categories,  setCategories]  = useState([]);
+  const [slide,       setSlide]       = useState(0);
+  const [loading,     setLoading]     = useState(true);
 
-const FEATURES = [
-  { icon: <Truck size={18} strokeWidth={1.5}/>, title: 'Free Shipping', sub: 'Orders over NPR 5,000' },
-  { icon: <Shield size={18} strokeWidth={1.5}/>, title: '100% Authentic', sub: 'Genuine products only' },
-  { icon: <RotateCcw size={18} strokeWidth={1.5}/>, title: 'Easy Returns', sub: '7-day return policy' },
-  { icon: <Headphones size={18} strokeWidth={1.5}/>, title: '24/7 Support', sub: 'Always here to help' },
-];
-
-function FlashTimer() {
-  const [time, setTime] = useState({ h: 5, m: 59, s: 59 });
   useEffect(() => {
-    const t = setInterval(() => setTime(p => {
-      let { h, m, s } = p;
-      s--; if (s < 0) { s = 59; m--; } if (m < 0) { m = 59; h--; } if (h < 0) h = 5;
-      return { h, m, s };
-    }), 1000);
+    Promise.all([
+      productAPI.getAll({ featured: 'true', limit: 8 }),
+      categoryAPI.getAll(),
+    ]).then(([pRes, cRes]) => {
+      setFeatured(pRes.data.data);
+      setCategories(cRes.data.data);
+    }).finally(() => setLoading(false));
+  }, []);
+
+  // Auto-advance hero
+  useEffect(() => {
+    const t = setInterval(() => setSlide((s) => (s + 1) % HERO_SLIDES.length), 4000);
     return () => clearInterval(t);
   }, []);
-  return (
-    <div className="flex items-center gap-1.5">
-      {[time.h, time.m, time.s].map((v, i) => (
-        <span key={i} className="flex items-center gap-1.5">
-          <span className="flash-timer">{String(v).padStart(2, '0')}</span>
-          {i < 2 && <span className="text-white font-bold text-sm">:</span>}
-        </span>
-      ))}
-    </div>
-  );
-}
 
-function HeroBanner() {
-  const [idx, setIdx] = useState(0);
-  const timer = useRef(null);
-  const start = () => { timer.current = setInterval(() => setIdx(i => (i + 1) % BANNERS.length), 5000); };
-  useEffect(() => { start(); return () => clearInterval(timer.current); }, []);
-  const go = (dir) => { clearInterval(timer.current); setIdx(i => (i + dir + BANNERS.length) % BANNERS.length); start(); };
-  const b = BANNERS[idx];
+  const current = HERO_SLIDES[slide];
 
   return (
-    <div className="relative overflow-hidden bg-[#0a0a0a]" style={{ height: 'min(480px, 60vw)', minHeight: '280px' }}>
-      <img src={b.img} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 transition-opacity duration-700" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <Navbar />
 
-      <div className="relative h-full flex items-center">
-        <div className="container-custom">
-          <div className="max-w-lg">
-            <p className="section-label text-accent-400 mb-4" style={{ color: '#c8a96e' }}>
-              <span style={{ background: '#c8a96e', display: 'inline-block', width: 20, height: 1, marginRight: 8, verticalAlign: 'middle' }} />
-              {b.eyebrow}
-            </p>
-            <h1 className="text-white font-bold leading-tight mb-4" style={{ fontSize: 'clamp(28px, 4vw, 52px)', whiteSpace: 'pre-line' }}>
-              {b.title}
-            </h1>
-            <p className="text-gray-300 text-sm leading-relaxed mb-8 max-w-sm">{b.sub}</p>
-            <div className="flex items-center gap-4">
-              <Link to={b.link} className="btn-accent px-8 py-3 text-sm tracking-wide">
-                {b.cta}
-              </Link>
-              <Link to="/products" className="text-white/60 hover:text-white text-sm flex items-center gap-2 transition-colors group">
-                Browse all <ArrowRight size={14} strokeWidth={1.5} className="group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+      {/* ── Hero Banner ────────────────────────────────────── */}
+      <section className={`bg-gradient-to-r ${current.bg} text-white py-20 px-4 transition-all duration-700`}>
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="text-6xl mb-4">{current.emoji}</div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-sm">{current.title}</h1>
+          <p className="text-lg md:text-xl text-white/90 mb-8">{current.sub}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/products" className="bg-white text-orange-600 font-bold px-8 py-3 rounded-xl hover:bg-orange-50 transition-colors">
+              Shop Now →
+            </Link>
+            <Link to="/register" className="border-2 border-white text-white font-bold px-8 py-3 rounded-xl hover:bg-white/10 transition-colors">
+              Join Free
+            </Link>
+          </div>
+          {/* Dots */}
+          <div className="flex justify-center gap-2 mt-8">
+            {HERO_SLIDES.map((_, i) => (
+              <button key={i} onClick={() => setSlide(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${i === slide ? 'bg-white w-6' : 'bg-white/40'}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats Bar ──────────────────────────────────────── */}
+      <section className="bg-orange-500 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm font-medium">
+          {[['🚚', 'Free Delivery', 'Orders above NPR 2000'], ['🔒', 'Secure Payment', '100% protected'], ['↩️', 'Easy Returns', '7-day return policy'], ['🎧', '24/7 Support', 'Always here for you']].map(([icon, title, sub]) => (
+            <div key={title}>
+              <span className="text-2xl">{icon}</span>
+              <p className="font-semibold mt-1">{title}</p>
+              <p className="text-orange-100 text-xs">{sub}</p>
             </div>
-          </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* Controls */}
-      <button onClick={() => go(-1)} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 border border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 flex items-center justify-center transition-all text-white" style={{ borderRadius: '2px' }}>
-        <ChevronLeft size={18} strokeWidth={1.5} />
-      </button>
-      <button onClick={() => go(1)} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 border border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 flex items-center justify-center transition-all text-white" style={{ borderRadius: '2px' }}>
-        <ChevronRight size={18} strokeWidth={1.5} />
-      </button>
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
-        {BANNERS.map((_, i) => (
-          <button key={i} onClick={() => setIdx(i)}
-            className={`transition-all duration-300 rounded-full ${i === idx ? 'w-6 h-1.5 bg-accent-400' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'}`} />
-        ))}
-      </div>
-    </div>
-  );
-}
+      <div className="max-w-7xl mx-auto px-4 py-12 space-y-16">
 
-export default function Home() {
-  const [featured, setFeatured] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [loading, setLoading] = useState(true);
+        {/* ── Categories ─────────────────────────────────── */}
+        {categories.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold dark:text-white mb-6">Shop by Category</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {categories.map((cat) => (
+                <Link key={cat._id} to={`/products?category=${cat._id}`}
+                  className="card p-6 text-center hover:shadow-lg hover:border-orange-200 dark:hover:border-orange-700 transition-all group cursor-pointer">
+                  <div className="text-4xl mb-3">
+                    {cat.image ? <img src={cat.image} alt={cat.name} className="w-12 h-12 mx-auto object-cover rounded-xl" /> : '📦'}
+                  </div>
+                  <p className="font-semibold dark:text-white group-hover:text-orange-500 transition-colors">{cat.name}</p>
+                  {cat.description && <p className="text-xs text-gray-400 mt-1">{cat.description}</p>}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-  useEffect(() => {
-    Promise.all([productsAPI.getFeatured(), productsAPI.getAll({ sort: 'newest', limit: 10 })])
-      .then(([f, n]) => { setFeatured(f.data.products || []); setNewArrivals(n.data.products || []); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-[var(--bg)]">
-      <HeroBanner />
-
-      {/* Features */}
-      <div className="bg-white dark:bg-[#0a0a0a] border-b border-[var(--border)]">
-        <div className="container-custom py-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {FEATURES.map(f => (
-              <div key={f.title} className="flex items-center gap-3">
-                <div className="w-9 h-9 border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] flex-shrink-0" style={{ borderRadius: '2px' }}>
-                  {f.icon}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-[var(--text)] tracking-wide">{f.title}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">{f.sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="container-custom py-12 space-y-16">
-        {/* Categories */}
-        <section>
-          <SectionHeader label="Browse" title="Shop by Category" link="/products" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {CATEGORIES.map(cat => (
-              <Link key={cat.name} to={cat.link}
-                className="group bg-white dark:bg-[#141414] border border-[var(--border)] p-6 text-center hover:border-[var(--text)] transition-all duration-300 hover:-translate-y-1 hover:shadow-medium"
-                style={{ borderRadius: '2px' }}>
-                <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300 inline-block">{cat.icon}</div>
-                <p className="text-sm font-bold text-[var(--text)] tracking-wide">{cat.name}</p>
-                <p className="text-[10px] text-[var(--text-muted)] mt-1">{cat.sub}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Flash Sale */}
+        {/* ── Featured Products ──────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <p className="section-label mb-2">Limited Time</p>
-              <div className="flex items-center gap-4">
-                <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">Flash Sale</h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[var(--text-muted)]">Ends in</span>
-                  <FlashTimer />
+            <h2 className="text-2xl font-bold dark:text-white">⭐ Featured Products</h2>
+            <Link to="/products" className="text-orange-500 font-medium hover:underline text-sm">View all →</Link>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="card overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mt-3" />
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-            <Link to="/products?featured=true" className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] transition-colors group">
-              View All <ArrowRight size={13} strokeWidth={2} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {loading ? Array(10).fill(null).map((_, i) => <SkeletonCard key={i} />)
-              : featured.slice(0, 10).map((p, i) => <ProductCard key={p._id} product={p} index={i} />)}
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+              {featured.map((p) => <ProductCard key={p._id} product={p} />)}
+            </div>
+          )}
         </section>
 
-        {/* Editorial Banner */}
-        <section className="grid md:grid-cols-2 gap-3">
-          {[
-            { img: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=800', tag: 'Sport & Fitness', title: 'Move with Purpose', sub: 'Premium activewear & gear', link: '/products?category=Fashion', dark: true },
-            { img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800', tag: 'Home & Living', title: 'Elevate Your Space', sub: 'Curated home essentials', link: '/products?category=Home', dark: false },
-          ].map(b => (
-            <Link key={b.title} to={b.link}
-              className="relative overflow-hidden group block h-52"
-              style={{ borderRadius: '2px' }}>
-              <img src={b.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className={`absolute inset-0 ${b.dark ? 'bg-gradient-to-r from-[#0a0a0a]/80 to-transparent' : 'bg-gradient-to-t from-[#0a0a0a]/80 to-transparent'}`} />
-              <div className="absolute bottom-0 left-0 p-6">
-                <p className="text-[10px] text-accent-300 font-bold tracking-widest uppercase mb-1">{b.tag}</p>
-                <h3 className="text-white font-bold text-lg tracking-tight">{b.title}</h3>
-                <p className="text-white/60 text-xs mt-0.5 mb-3">{b.sub}</p>
-                <span className="text-white text-xs font-semibold flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-                  Shop Now <ArrowRight size={12} strokeWidth={2} />
-                </span>
-              </div>
-            </Link>
-          ))}
-        </section>
-
-        {/* New Arrivals */}
-        <section>
-          <SectionHeader label="Just In" title="New Arrivals" link="/products?sort=newest" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {loading ? Array(10).fill(null).map((_, i) => <SkeletonCard key={i} />)
-              : newArrivals.slice(0, 10).map((p, i) => <ProductCard key={p._id} product={p} index={i} />)}
-          </div>
-        </section>
-
-        {/* Why Us */}
-        <section className="bg-[#111111] dark:bg-[#0a0a0a] border border-[#222222] text-white p-10 md:p-16 text-center" style={{ borderRadius: '2px' }}>
-          <Sparkles size={24} className="text-accent-400 mx-auto mb-4" strokeWidth={1.5} />
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">Nepal's Most Trusted<br />Premium Store</h2>
-          <p className="text-gray-400 text-sm max-w-md mx-auto leading-relaxed mb-8">
-            We source directly from authorized distributors worldwide, ensuring every product is 100% authentic and backed by warranty.
-          </p>
-          <div className="flex flex-wrap justify-center gap-8">
-            {[['10,000+', 'Happy Customers'], ['500+', 'Premium Products'], ['4.9★', 'Average Rating'], ['2 Days', 'Avg. Delivery']].map(([num, label]) => (
-              <div key={label}>
-                <p className="text-accent-400 font-bold text-xl">{num}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
+        {/* ── CTA Banner ─────────────────────────────────── */}
+        <section className="bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-800 dark:to-gray-900 rounded-3xl p-10 text-white text-center">
+          <h2 className="text-3xl font-extrabold mb-3">Ready to start shopping?</h2>
+          <p className="text-gray-300 mb-6">Join thousands of happy customers across Nepal</p>
+          <Link to="/products" className="bg-orange-500 hover:bg-orange-600 font-bold px-8 py-3 rounded-xl transition-colors">
+            Browse All Products
+          </Link>
         </section>
       </div>
+
+      <Footer />
     </div>
   );
-}
+};
+
+export default Home;

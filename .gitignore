@@ -1,31 +1,7 @@
-# Dependencies
 node_modules/
-client/node_modules/
-server/node_modules/
-
-# Environment
 .env
-server/.env
-client/.env
-client/.env.local
-
-# Build outputs
-client/dist/
-server/dist/
-
-# Logs
-*.log
-npm-debug.log*
-
-# OS
+dist/
 .DS_Store
-Thumbs.db
-
-# Editor
-.vscode/
-.idea/
-*.swp
-
-# Cache
-.eslintcache
-.parcel-cache/
+*.log
+.cache/
+coverage/

@@ -1,161 +1,125 @@
+// ============================================================
+// client/src/utils/store.js — Zustand Global State
+// ============================================================
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import toast from 'react-hot-toast';
-import { authAPI, cartAPI, wishlistAPI } from './api';
 
-// ─── Auth Store ───────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// AUTH STORE
+// ══════════════════════════════════════════════════════════════
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      user: null,
+      user:  null,
       token: null,
-      isLoading: false,
 
-      login: async (credentials) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await authAPI.login(credentials);
-          localStorage.setItem('sabai_token', data.token);
-          set({ user: data.user, token: data.token, isLoading: false });
-          toast.success(`Welcome back, ${data.user.name}! 👋`);
-          return { success: true, user: data.user };
-        } catch (err) {
-          set({ isLoading: false });
-          const msg = err.response?.data?.message || 'Login failed';
-          toast.error(msg);
-          return { success: false, message: msg };
-        }
-      },
-
-      register: async (userData) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await authAPI.register(userData);
-          localStorage.setItem('sabai_token', data.token);
-          set({ user: data.user, token: data.token, isLoading: false });
-          toast.success(`Welcome to SabaiSale, ${data.user.name}! 🎉`);
-          return { success: true, user: data.user };
-        } catch (err) {
-          set({ isLoading: false });
-          const msg = err.response?.data?.message || 'Registration failed';
-          toast.error(msg);
-          return { success: false, message: msg };
-        }
+      setAuth: (user, token) => {
+        localStorage.setItem('token', token);
+        set({ user, token });
       },
 
       logout: () => {
-        localStorage.removeItem('sabai_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         set({ user: null, token: null });
-        toast.success('Logged out successfully');
       },
 
-      updateUser: (user) => set({ user }),
+      updateUser: (updates) =>
+        set((state) => ({ user: { ...state.user, ...updates } })),
 
       isAdmin: () => get().user?.role === 'admin',
-      isLoggedIn: () => !!get().token,
     }),
-    { name: 'sabai_auth', partialize: (state) => ({ user: state.user, token: state.token }) }
+    { name: 'auth-store', partialize: (s) => ({ user: s.user, token: s.token }) }
   )
 );
 
-// ─── Cart Store ───────────────────────────────────────────────────────────────
-export const useCartStore = create((set, get) => ({
-  items: [],
-  isLoading: false,
+// ══════════════════════════════════════════════════════════════
+// CART STORE
+// ══════════════════════════════════════════════════════════════
+export const useCartStore = create(
+  persist(
+    (set, get) => ({
+      items: [], // [{ _id, name, price, quantity, image }]
 
-  addItem: (product, quantity = 1) => {
-    const items = get().items;
-    const idx = items.findIndex(i => i.product._id === product._id);
-    if (idx > -1) {
-      const updated = [...items];
-      updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + quantity };
-      set({ items: updated });
-    } else {
-      set({ items: [...items, { product, quantity }] });
-    }
-    toast.success(`${product.name} added to cart 🛒`);
-  },
+      addItem: (product, qty = 1) => {
+        set((state) => {
+          const existing = state.items.find((i) => i._id === product._id);
+          if (existing) {
+            return {
+              items: state.items.map((i) =>
+                i._id === product._id
+                  ? { ...i, quantity: i.quantity + qty }
+                  : i
+              ),
+            };
+          }
+          return {
+            items: [
+              ...state.items,
+              {
+                _id:      product._id,
+                name:     product.name,
+                price:    product.price,
+                image:    product.images?.[0]?.url || '',
+                quantity: qty,
+              },
+            ],
+          };
+        });
+      },
 
-  removeItem: (productId) => {
-    set({ items: get().items.filter(i => i.product._id !== productId) });
-    toast.success('Item removed from cart');
-  },
+      removeItem: (id) =>
+        set((state) => ({ items: state.items.filter((i) => i._id !== id) })),
 
-  updateQuantity: (productId, quantity) => {
-    if (quantity <= 0) { get().removeItem(productId); return; }
-    set({ items: get().items.map(i => i.product._id === productId ? { ...i, quantity } : i) });
-  },
+      updateQty: (id, qty) =>
+        set((state) => ({
+          items:
+            qty <= 0
+              ? state.items.filter((i) => i._id !== id)
+              : state.items.map((i) => (i._id === id ? { ...i, quantity: qty } : i)),
+        })),
 
-  clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [] }),
 
-  getTotal: () => get().items.reduce((acc, i) => acc + i.product.price * i.quantity, 0),
-  getCount: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
-}));
+      // Computed totals
+      total:      () => get().items.reduce((s, i) => s + i.price * i.quantity, 0),
+      itemCount:  () => get().items.reduce((s, i) => s + i.quantity, 0),
+    }),
+    { name: 'cart-store' }
+  )
+);
 
-// ─── Wishlist Store ───────────────────────────────────────────────────────────
-export const useWishlistStore = create((set, get) => ({
-  items: [],
+// ══════════════════════════════════════════════════════════════
+// WISHLIST STORE
+// ══════════════════════════════════════════════════════════════
+export const useWishlistStore = create(
+  persist(
+    (set, get) => ({
+      ids: [], // product IDs
 
-  toggle: (product) => {
-    const items = get().items;
-    const isIn = items.some(i => i._id === product._id);
-    if (isIn) {
-      set({ items: items.filter(i => i._id !== product._id) });
-      toast.success('Removed from wishlist');
-    } else {
-      set({ items: [...items, product] });
-      toast.success('Added to wishlist ❤️');
-    }
-  },
+      toggle: (id) =>
+        set((state) => ({
+          ids: state.ids.includes(id)
+            ? state.ids.filter((x) => x !== id)
+            : [...state.ids, id],
+        })),
 
-  isWishlisted: (productId) => get().items.some(i => i._id === productId),
-  getCount: () => get().items.length,
-}));
+      isWishlisted: (id) => get().ids.includes(id),
+      clear:        ()   => set({ ids: [] }),
+    }),
+    { name: 'wishlist-store' }
+  )
+);
 
-// ─── Theme Store ──────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// THEME STORE
+// ══════════════════════════════════════════════════════════════
 export const useThemeStore = create(
   persist(
-    (set, get) => ({
-      isDark: false,
-      toggle: () => {
-        const next = !get().isDark;
-        document.documentElement.classList.toggle('dark', next);
-        set({ isDark: next });
-      },
-      init: () => {
-        const { isDark } = get();
-        document.documentElement.classList.toggle('dark', isDark);
-      },
+    (set) => ({
+      dark: false,
+      toggle: () => set((s) => ({ dark: !s.dark })),
     }),
-    { name: 'sabai_theme' }
+    { name: 'theme-store' }
   )
 );
-
-// ─── Recently Viewed Store ────────────────────────────────────────────────────
-export const useRecentlyViewedStore = create(
-  persist(
-    (set, get) => ({
-      items: [],
-      add: (product) => {
-        const items = get().items.filter(i => i._id !== product._id);
-        set({ items: [product, ...items].slice(0, 8) });
-      },
-    }),
-    { name: 'sabai_recently_viewed' }
-  )
-);
-
-// ─── Compare Store ────────────────────────────────────────────────────────────
-export const useCompareStore = create((set, get) => ({
-  items: [],
-  add: (product) => {
-    const items = get().items;
-    if (items.length >= 3) { toast.error('Max 3 products to compare'); return; }
-    if (items.some(i => i._id === product._id)) { toast.error('Already added'); return; }
-    set({ items: [...items, product] });
-    toast.success('Added to compare ⚖️');
-  },
-  removeItem: (id) => set({ items: get().items.filter(i => i._id !== id) }),
-  clearAll: () => set({ items: [] }),
-  isComparing: (id) => get().items.some(i => i._id === id),
-}));

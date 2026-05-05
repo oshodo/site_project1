@@ -1,101 +1,85 @@
+// ============================================================
+// client/src/App.jsx — Root Router with protected & admin routes
+// ============================================================
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { useEffect } from 'react';
-import { useThemeStore, useAuthStore } from './utils/store';
+import { useEffect }        from 'react';
+import { useThemeStore }    from './utils/store';
 
-import Navbar from './components/common/Navbar';
-import Footer from './components/common/Footer';
+// Layout & Guards
+import { ProtectedRoute, AdminRoute } from './components/common/ProtectedRoute';
 
-import Home from './pages/Home';
-import Products from './pages/Products';
-import ProductDetail from './pages/ProductDetail';
-import { Login } from './pages/Login';
-import { Register } from './pages/Login';
-import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import { OrderSuccess } from './pages/OrderSuccess';
-import Orders from './pages/Orders';
-import OrderDetail from './pages/OrderDetail';
-import Wishlist from './pages/Wishlist';
-import Compare from './pages/Compare';
-import Profile from './pages/Profile';
-import About from './pages/About';
-import NotFound from './pages/NotFound';
+// Admin Pages
+import AdminLayout      from './pages/admin/AdminLayout';
+import AdminDashboard   from './pages/admin/AdminDashboard';
+import AdminProducts    from './pages/admin/AdminProducts';
+import AdminOrders      from './pages/admin/AdminOrders';
+import AdminUsers       from './pages/admin/AdminUsers';
+import AdminCategories  from './pages/admin/AdminCategories';
 
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminProducts from './pages/admin/Products';
-import Analytics from './pages/admin/Analytics';
-import { AdminOrders, AdminUsers, AdminCategories, AdminFounders } from './pages/admin/Orders';
+// User Pages (import these from existing files in your repo)
+import MyOrders  from './pages/MyOrders';
 
-const ProtectedRoute = ({ children }) => {
-  const { isLoggedIn } = useAuthStore();
-  return isLoggedIn() ? children : <Navigate to="/login" replace />;
-};
+// Lazy-load heavy pages that already exist in the repo
+import { lazy, Suspense } from 'react';
+const Home          = lazy(() => import('./pages/Home'));
+const Products      = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart          = lazy(() => import('./pages/Cart'));
+const Checkout      = lazy(() => import('./pages/Checkout'));
+const Login         = lazy(() => import('./pages/Login'));
+const Register      = lazy(() => import('./pages/Register'));
+const Profile       = lazy(() => import('./pages/Profile'));
 
-const AdminRoute = ({ children }) => {
-  const { isLoggedIn, isAdmin } = useAuthStore();
-  if (!isLoggedIn()) return <Navigate to="/login" replace />;
-  if (!isAdmin()) return <Navigate to="/" replace />;
-  return children;
-};
-
-const Layout = ({ children }) => <><Navbar />{children}<Footer /></>;
-const ProtectedLayout = ({ children }) => (
-  <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full" />
+  </div>
 );
 
-export default function App() {
-  const { init } = useThemeStore();
-  useEffect(() => { init(); }, []);
+const App = () => {
+  const { dark } = useThemeStore();
+
+  // Apply dark class to root <html> for Tailwind dark mode
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+  }, [dark]);
 
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            fontFamily: 'Inter, sans-serif',
-            borderRadius: '8px',
-            fontSize: '13px',
-          },
-        }}
-      />
-      <Routes>
-        {/* Public */}
-        <Route path="/" element={<Layout><Home /></Layout>} />
-        <Route path="/products" element={<Layout><Products /></Layout>} />
-        <Route path="/products/:id" element={<Layout><ProductDetail /></Layout>} />
-        <Route path="/about" element={<Layout><About /></Layout>} />
-        <Route path="/compare" element={<Layout><Compare /></Layout>} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* ── Public Routes ──────────────────────────────── */}
+          <Route path="/"             element={<Home />} />
+          <Route path="/products"     element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/login"        element={<Login />} />
+          <Route path="/register"     element={<Register />} />
+          <Route path="/cart"         element={<Cart />} />
 
-        {/* Protected */}
-        <Route path="/cart" element={<ProtectedLayout><Cart /></ProtectedLayout>} />
-        <Route path="/checkout" element={<ProtectedLayout><Checkout /></ProtectedLayout>} />
-        <Route path="/order-success/:id" element={<ProtectedLayout><OrderSuccess /></ProtectedLayout>} />
-        <Route path="/orders" element={<ProtectedLayout><Orders /></ProtectedLayout>} />
-        <Route path="/orders/:id" element={<ProtectedLayout><OrderDetail /></ProtectedLayout>} />
-        <Route path="/wishlist" element={<ProtectedLayout><Wishlist /></ProtectedLayout>} />
-        <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
+          {/* ── Protected User Routes ──────────────────────── */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/checkout"  element={<Checkout />} />
+            <Route path="/profile"   element={<Profile />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+          </Route>
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="founders" element={<AdminFounders />} />
-        </Route>
+          {/* ── Admin Routes (JWT + role=admin required) ────── */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index              element={<AdminDashboard />} />
+              <Route path="products"    element={<AdminProducts />} />
+              <Route path="categories"  element={<AdminCategories />} />
+              <Route path="orders"      element={<AdminOrders />} />
+              <Route path="users"       element={<AdminUsers />} />
+            </Route>
+          </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* ── 404 Fallback ───────────────────────────────── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
-}
+};
+
+export default App;
